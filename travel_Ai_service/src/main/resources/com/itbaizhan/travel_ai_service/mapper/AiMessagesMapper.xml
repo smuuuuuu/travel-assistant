@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itbaizhan.travel_ai_service.mapper.AiMessagesMapper">
+
+    <resultMap id="BaseResultMap" type="com.itbaizhan.travelcommon.pojo.AiMessages">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="conversationId" column="conversation_id" jdbcType="BIGINT"/>
+            <result property="messageType" column="message_type" jdbcType="OTHER"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="contentType" column="content_type" jdbcType="OTHER"/>
+            <result property="metadata" column="metadata" jdbcType="OTHER"/>
+            <result property="attachments" column="attachments" jdbcType="OTHER"/>
+            <result property="tokensUsed" column="tokens_used" jdbcType="INTEGER"/>
+            <result property="processingTime" column="processing_time" jdbcType="INTEGER"/>
+            <result property="confidenceScore" column="confidence_score" jdbcType="DECIMAL"/>
+            <result property="feedback" column="feedback" jdbcType="OTHER"/>
+            <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,conversation_id,message_type,
+        content,content_type,metadata,
+        attachments,tokens_used,processing_time,
+        confidence_score,feedback,created_at
+    </sql>
+</mapper>

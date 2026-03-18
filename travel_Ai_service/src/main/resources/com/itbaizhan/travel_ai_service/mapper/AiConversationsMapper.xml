@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itbaizhan.travel_ai_service.mapper.AiConversationsMapper">
+
+    <resultMap id="BaseResultMap" type="com.itbaizhan.travelcommon.pojo.AiConversations">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="sessionId" column="session_id" jdbcType="VARCHAR"/>
+            <result property="title" column="title" jdbcType="VARCHAR"/>
+            <result property="contextType" column="context_type" jdbcType="OTHER"/>
+            <result property="contextData" column="context_data" jdbcType="OTHER"/>
+            <result property="language" column="language" jdbcType="VARCHAR"/>
+            <result property="status" column="status" jdbcType="OTHER"/>
+            <result property="startedAt" column="started_at" jdbcType="TIMESTAMP"/>
+            <result property="endedAt" column="ended_at" jdbcType="TIMESTAMP"/>
+            <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+            <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,session_id,
+        title,context_type,context_data,
+        language,status,started_at,
+        ended_at,created_at,updated_at
+    </sql>
+</mapper>
