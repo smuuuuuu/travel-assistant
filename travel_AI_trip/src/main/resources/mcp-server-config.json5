@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "amap-maps": {
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "node",
+        "%USERPROFILE%\\node_modules\\@amap\\amap-maps-mcp-server\\build\\index.js"
+      ],
+      "env": {
+        "AMAP_MAPS_API_KEY": "9bed5ea5759acfd7d3f88ea190d5aa5a"
+      }
+    },
+    "12306-mcp": {
+      "args": [
+        "/c",
+        "npx.cmd",
+        "-y",
+        "12306-mcp"
+      ],
+      "command": "cmd.exe"
+    },
+    "variflight": {
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "npx.cmd",
+        "-y",
+        "@variflight-ai/variflight-mcp"
+      ],
+      "env": {
+        "VARIFLIGHT_API_KEY": "sk-K2CFCQ0fEM6NtpWa4VwD1omihcFwZEuQmsnBbuANcpw"
+      }
+    }
+  }
+}

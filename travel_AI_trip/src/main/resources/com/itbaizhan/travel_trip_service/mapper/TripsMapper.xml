@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itbaizhan.travel_trip_service.mapper.TripsMapper">
+
+    <!--<resultMap id="BaseResultMap" type="com.itbaizhan.travelcommon.pojo.Trips">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="title" column="title" jdbcType="VARCHAR"/>
+            <result property="description" column="description" jdbcType="VARCHAR"/>
+            <result property="destinationId" column="destination_id" jdbcType="BIGINT"/>
+            <result property="startDate" column="start_date" jdbcType="DATE"/>
+            <result property="endDate" column="end_date" jdbcType="DATE"/>
+            <result property="totalDays" column="total_days" jdbcType="INTEGER"/>
+            <result property="travelerCount" column="traveler_count" jdbcType="INTEGER"/>
+            <result property="budgetTotal" column="budget_total" jdbcType="DECIMAL"/>
+            <result property="budgetUsed" column="budget_used" jdbcType="DECIMAL"/>
+            <result property="tripType" column="trip_type" jdbcType="OTHER"/>
+            <result property="status" column="status" jdbcType="OTHER"/>
+            <result property="isPublic" column="is_public" jdbcType="TINYINT"/>
+            <result property="coverImageUrl" column="cover_image_url" jdbcType="VARCHAR"/>
+            <result property="weatherInfo" column="weather_info" jdbcType="OTHER"/>
+            <result property="emergencyContacts" column="emergency_contacts" jdbcType="OTHER"/>
+            <result property="notes" column="notes" jdbcType="VARCHAR"/>
+            <result property="aiGenerated" column="ai_generated" jdbcType="TINYINT"/>
+            <result property="generationPrompt" column="generation_prompt" jdbcType="VARCHAR"/>
+            <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+    </resultMap>-->
+
+    <select id="getTripVoByUserId" resultType="com.itbaizhan.travelcommon.vo.TripVo">
+        select
+            trips.trip_id as tripId,
+            trips.title as title,
+            trips.destination as destination,
+            trips.budget_total as budget,
+            trips.total_days as totalDays,
+            trips.status as status,
+            trips.created_at as createdAt
+        from trips
+        where trips.user_id = #{userId}
+        order by created_at desc
+    </select>
+
+    <select id="isHaveDirect" resultType="int">
+        SELECT EXISTS(
+            SELECT 1 FROM trip_transportation
+            WHERE train_no = #{trainNumber}
+              AND start_date = #{startDate}
+              AND from_station_telecode = #{fromStation}
+        ) AS has_data;
+    </select>
+
+    <select id="getCompleteStatusInteger" resultType="int">
+        select complete_status from trips where trip_id = #{tripId}
+    </select>
+    <select id="getIsPresentTrip" resultType="int">
+        select EXISTS(select 1 from trips where trip_id = #{tripId} and user_id = #{userId})
+    </select>
+</mapper>

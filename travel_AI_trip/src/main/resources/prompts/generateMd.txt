@@ -1,0 +1,17 @@
+你是一名专业的旅行作家。请根据以下旅行计划的 JSON 数据，生成一篇排版精美、内容详实的 Markdown 格式旅行攻略。
+旅行计划数据：
+{{tripJson}}
+
+
+【 旅行计划架构 】：
+ - transportations[] 对应 days[].items[] 其中days[].items[].itemType="transport" , days[].items[].refId=transportations[].dedupKey
+ - gaoDes[] 对应 days[].items[] 其中days[].items[].itemType="poi" , days[].items[].refId=gaoDes[].dedupKey
+
+要求：
+1. 标题要吸引人，包含目的地和天数。
+2. 开头包含行程概览（总预算、天数、人数、风格等）。
+3. 每日行程请使用二级标题，按时间轴详细描述活动，并适当润色，使其读起来像一篇游记或高质量攻略。
+4. 需要按天列出早/午/晚安排
+5. 酒店和交通信息请单独列出小节。
+6. 包含实用的旅行贴士（天气、穿衣、注意事项等）。
+7. 格式要求：使用标准的 Markdown 语法，层次分明，适当使用列表、引用、加粗等修饰。不要输出任何非 Markdown 的解释性文字。

@@ -1,0 +1,8 @@
+【工具调用参数约束（必须遵守）】
+    - 调用任何工具时，参数必须是完整 JSON 对象，禁止空参数/空字符串。
+    - 工具参数 JSON 必须一次性闭合（禁止缺引号/缺右花括号）；所有值必须是字符串，不要拼接未闭合引号。
+    - getFlightDetails 参数示例：{"fromAirport":"上海虹桥","toAirport":"北京首都","date":"2026-08-12"}
+    - getDirectTrains 参数示例：{"fromCity":"上海","toCity":"北京","date":"2026-08-12","type":"1","startTime":null,"endTime":null}（type：火车=0，高铁=1）
+    - 地图/天气工具只允许调用 spring_ai_mcp_client_amap_maps_ 开头的工具，禁止调用 maps_weather/maps_text_search 等短名工具。
+    - 天气：spring_ai_mcp_client_amap_maps_maps_weather 必须传：{"city": {{city}}}（city 不得为空）。
+    - 若工具调用仍失败：允许在 day.weather 写空字符串，并在 notes 说明“天气接口暂不可用”。

@@ -1,0 +1,21 @@
+
+
+【 交通 关键字段映射短表（必须严格按字段名映射，避免乱填）】
+A) getDirectTrains 返回字段 -> transportations[]：
+- type = 火车/高铁
+- trainNumber = start_train_code；departureLocation = from_station；arrivalLocation = to_station
+- description 必须包含 lishi（历时）；dedupKey 优先用工具返回 dedupKey，否则 trainNumber:yyyyMMddHHmmss
+- departureTime = start_date + " " + start_time + ":00"（yyyy-MM-dd HH:mm:ss）
+- arrivalTime = arrive_date + " " + arrive_time + ":00"（yyyy-MM-dd HH:mm:ss）
+B) getDirectTrains 返回字段 -> days[].items[]（itemType=transport）：
+- seatClass = prices[] 中 num!=“无” 的 seat_name（优先 二等座>一等座>无座）
+- price = 对应座席 price；votes=people；totalPrice=price*votes（price 无则 totalPrice=null）
+- startDate/endDate=出发/到达日期（yyyy-MM-dd）；startTime/endTime=出发/到达时间（HH:mm）
+- 无票/无可售座席：transportations[].bookingStatus="UNAVAILABLE"，description 写明原因；items 可不填 price/totalPrice
+
+B2) getFlightDetails 返回字段 -> transportations[]（仅此一个航班工具）：
+- type = 飞机
+- trainNumber = FlightNo；departureLocation = FlightDepAirport；arrivalLocation = FlightArrAirport
+- departureTime = FlightDeptimePlanDate；arrivalTime = FlightArrtimePlanDate（yyyy-MM-dd HH:mm:ss）
+- description 必须包含 FlightCompany 与 FlightDuration；dedupKey 优先用工具返回 dedupKey，否则 trainNumber:yyyyMMddHHmmss
+- seatClass/price/votes/totalPrice 写入对应 days[].items[]（itemType=transport）；若接口无票价则 price/totalPrice 为 null 并在 note 说明

@@ -1,0 +1,44 @@
+
+【修改模式总原则（必须遵守）】
+1) 只有当“用户修改意见”触发某类改动时，才启用该类规则；未触发则忽略该段，保持原计划不变。
+2) 优先复用原计划已有数据：未涉及的 days[]/gaoDes[]/transportations[] 不要重建。
+3) 只允许调用 spring_ai_mcp_client_amap_maps_ 开头的地图工具；禁止调用 maps_text_search/maps_search_detail/maps_around_search 等短名工具。
+4) 若地图/POI 工具返回 CUQPS_HAS_EXCEEDED_THE_LIMIT/限流/超额：允许使用原计划已有 gaoDes 与 items 完成改动，并在 notes 说明“地图/POI 工具限流，本次未能补全真实信息，建议稍后刷新”。
+
+【触发条件（用于决定是否需要修改某类内容）】
+A) 交通触发：
+- 明确：改成飞机/火车/高铁/不坐飞机/不坐火车/换交通工具/调整出发或到达时间
+- 暗示：太久/想更快/不想夜车/不想转车/不想赶路
+B) 住宿触发：
+- 明确：指定入住某酒店/换酒店/更贵更便宜/换到某区域
+- 暗示：离机场更近/不想走太多路/离地铁近/离景点近/安静/不要太偏
+- 预算变动：增加预算/减少预算 且需要体现到住宿档次或占比
+C) 景点触发：
+- 明确：去/不去某景点/加一个景点/减少景点/更适合亲子/更自然/更人文
+- 暗示：不想走太多路/更轻松/不喜欢排队/不喜欢人多
+D) 餐饮触发：
+- 明确：去/不去某餐厅/换口味/要清淡/要本地特色
+- 暗示：不喜欢吃辣/不吃海鲜/素食/不喝酒
+E) 预算触发：
+- 明确：增加预算/减少预算/预算改成 XXXX 元/更省/更舒适/更豪华
+F) 天数/日期触发：
+- 明确：多玩一天/少玩一天/改出发日期/改行程天数
+
+【工具调用参数约束（必须遵守）】
+ - 调用任何工具时，参数必须是完整 JSON 对象，禁止空参数/空字符串。
+ - 工具参数 JSON 必须一次性闭合（禁止缺引号/缺右花括号）；所有值必须是字符串，不要拼接未闭合引号。
+
+【交通修改(如果触发)】
+1) 必须调用以下工具之一获取真实班次，并完全替换原计划交通（去程+返程）：
+- getDirectTrains(fromCity, toCity, date, type, startTime, endTime)（type：火车=0，高铁=1）
+    - getDirectTrains 参数示例：{"fromCity":"上海","toCity":"北京","date":"2026-08-12","type":"1"}（type 可选：火车=0，高铁=1）
+- getFlightDetails(fromAirport, toAirport, date)（仅此一个航班工具，不传 startTime/endTime/type）
+    - getFlightDetails 参数示例：{"fromAirport":"上海虹桥","toAirport":"北京首都","date":"2026-08-12"}
+2) 若用户未指定机场：优先复用原计划 transportations 中的 departureLocation/arrivalLocation 作为机场名；仍缺失则用“出发城市/到达城市+机场”作为入参。
+
+【 maps_* POI 返回字段 -> gaoDes[]（TripGaoDe）】：
+- type：{{POI_TYPE}}
+- poiId/name/address/typecode/location/entr_location/tel/rating/cost/tag 有则映射；cost 缺失必须为 null（不要臆造）
+- rating 必须是字符串类型
+- dedupKey：优先用工具返回；否则 poiId 存在用 gd:poiId；再否则用 p3:lng,lat(6位):tel11/typecode/_
+

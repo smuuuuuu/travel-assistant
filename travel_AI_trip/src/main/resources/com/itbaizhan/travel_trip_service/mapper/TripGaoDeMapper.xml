@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itbaizhan.travel_trip_service.mapper.TripGaoDeMapper">
+
+    <!--<resultMap id="tripGade" type="com.itbaizhan.travelcommon.pojo.TripGaoDe">
+        <id property="id" column="id"/>
+        <result property="poiId" column="poi_id" />
+        <result property="type" column="type" />
+        <result property="typeName" column="typeName" />
+        <result property="name" column="name" />
+        <result property="pName" column="p_name" />
+        <result property="cityName" column="city_name" />
+        <result property="address" column="address" />
+        <result property="typecode" column="typecode" />
+        <result property="rating" column="rating" />
+        <result property="cost" column="cost"/>
+        <result property="tag" column="tag"/>
+        <result property="location" column="location"/>
+        <result property="entrLocation" column="entr_location"/>
+        <result property="tel" column="tel"/>
+        <result property="photo" column="photo"/>
+        <result property="createAt" column="creat_at" />
+        <result property="dedupKey" column="dedupKey"/>
+    </resultMap>-->
+
+    <select id="getTripGaoDeByTripId" resultType="com.itbaizhan.travelcommon.pojo.TripGaoDe">
+        select
+            trip_id,
+            user_id,
+            trip_gaoDe.type,
+            trip_gaoDe_type.name as typeName,
+            poi_id,
+            trip_gaoDe.name as name,
+            p_name,
+            city_name,
+            address,
+            typecode,
+            rating,
+            cost,
+            tag,
+            photo,
+            location,
+            entr_location,
+            start_time,
+            end_time
+        from trip_gaoDe,trip_gaoDe_type
+        where trip_id = #{tripId} and trip_gaoDe.type = trip_gaoDe_type.type
+    </select>
+
+    <select id="getGaoDePoiName" resultType="String">
+        SELECT poi_name from gaoDe_poi WHERE type = #{type}
+    </select>
+
+    <select id="getNameByAiModuleId" resultType="java.lang.String">
+        SELECT name
+        FROM trip_gaoDe_type where ai_module_id IN
+                <foreach collection="aiModuleIds" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+    </select>
+</mapper>

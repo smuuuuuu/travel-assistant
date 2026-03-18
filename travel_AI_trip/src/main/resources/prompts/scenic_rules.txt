@@ -1,0 +1,29 @@
+B. 景点通道（可选）
+    - keywords : types:
+        - 旅游景点 : 110000
+        - 公园广场 : 110100
+        - 城市广场 : 110105
+        - 风景名胜 : 110200
+        - 世界遗产 : 110201
+        - 国家级景点 : 110202
+        - 省级景点 : 110203
+        - 纪念馆 : 110204
+        - 寺庙道观 : 110205
+        - 教堂 : 110206
+        - 回教寺 : 110207
+        - 海滩 : 110208
+        - 观景点 : 110209
+        - 红色景区 : 110210
+
+    - 调用 maps_text_search，举例：
+      - city = 目的地城市名
+      - keywords = "旅游景点"
+      - types = "110000"
+    - keywords可以使用自定义名字(可以使用精确或者笼统的)，比如(泰山、宝莲寺、风景名胜、旅游景点等等)，types = 110000
+    - 景点选取必须符合当地特色，比如 上海 可以选择 陆家嘴/东方明珠
+
+C) maps_* POI 返回字段 -> gaoDes[]（TripGaoDe）：
+- type：景点=0
+- poiId/name/address/typecode/location/entr_location/tel/rating/cost/tag 有则映射；cost 缺失必须为 null（不要臆造）
+- rating 必须是字符串类型
+- dedupKey：优先用工具返回；否则 poiId 存在用 gd:poiId；再否则用 p3:lng,lat(6位):tel11/typecode/_

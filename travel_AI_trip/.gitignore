@@ -1,0 +1,7 @@
+HELP.md
+target/
+.gitattributes
+.mvn
+*.txt
+src/main/resources/method.txt
+src/main/resources/text.json

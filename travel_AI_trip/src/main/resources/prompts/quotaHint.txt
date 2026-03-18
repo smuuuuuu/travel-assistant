@@ -1,0 +1,5 @@
+【工具降级模式（必须遵守）】
+    - 当前地图/天气工具可能已限流或超额（例如 CUQPS_HAS_EXCEEDED_THE_LIMIT），本次禁止调用任何 spring_ai_mcp_client_amap_maps_ 工具。
+    - 直接使用【POI 候选数据】作为 gaoDes 的数据来源；若字段缺失允许为空/null，但 dedupKey/name/type/location/address 尽量填。
+    - day.weather 允许为空字符串。
+    - 在 notes 说明“地图/天气工具限流/超额，已降级为候选 POI + 经验规划，建议稍后刷新补全真实地址/坐标/电话”。
