@@ -1,0 +1,30 @@
+#server:
+#  port: 8008
+#logging:
+#  pattern:
+#    console: '%d{HH:mm:ss.SSS}%clr(%-5level) --- [%-15thread]%cyan(%-50logger{50}):%msg%n'
+#
+#spring:
+#  application:
+#    name: travel_file_service
+#  cloud:
+#    nacos:
+#      discovery:
+#        server-addr: 192.168.66.119:8848
+#
+#dubbo:
+#  application:
+#    name: travel_file_service
+#    serialize-check-status: DISABLE
+#    check-serializable: false
+#  protocol:
+#    name: dubbo
+#    port: -1
+#  registry:
+#    address: nacos://192.168.66.119:8848
+#
+#minio:
+#  url: http://192.168.66.119:9000
+#  accessKey: admin
+#  secretKey: admin123456
+#  bucketName: demo
