@@ -1,0 +1,48 @@
+#server:
+#  port: 9001
+#logging:
+#  pattern:
+#    console: '%d{HH:mm:ss.SSS}%clr(%-5level) --- [%-15thread]%cyan(%-50logger{50}):%msg%n'
+#
+#spring:
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://192.168.66.119:3306/travel_assistant?serverTimezone=UTC
+#    username: root
+#    password: root
+#  application:
+#    name: travel_user_service
+#  cloud:
+#    nacos:
+#      discovery:
+#        server-addr: 192.168.66.119:8848
+#  data:
+#    redis:
+#      host: 192.168.66.119
+#      port: 6379
+#      timeout: 30000
+#      jedis:
+#        pool:
+#          max-idle: 8
+#          max-wait: -1
+#          max-active: 8
+#          min-idle: 0
+#
+#dubbo:
+#  application:
+#    name: travel_user_service
+#    serialize-check-status: DISABLE
+#    check-serializable: false
+#  protocol:
+#    name: dubbo
+#    port: -1
+#  registry:
+#    address: nacos://192.168.66.119:8848
+#
+#mybatis-plus:
+#  global-config:
+#    db-config:
+#      id-type: auto
+#  configuration:
+#    map-underscore-to-camel-case: false
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
