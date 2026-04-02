@@ -85,7 +85,9 @@ public class AiModuleConfigServiceImpl implements AiModuleConfigService {
     }
     @Override
     public List<AiModuleConfig> getAllPoiTypeAiModule(){
-        List<TripGaodeType> tripGaodeTypes = tripGaodeTypeMapper.selectList(null);
+        QueryWrapper<TripGaodeType> queryWrapper = new QueryWrapper<>();
+        queryWrapper.ne("ai_module_id",0);
+        List<TripGaodeType> tripGaodeTypes = tripGaodeTypeMapper.selectList(queryWrapper);
         if(tripGaodeTypes != null){
             List<Long> collect = tripGaodeTypes.stream().map(TripGaodeType::getAiModuleId).toList();
             List<AiModuleConfig> aiModuleConfigs = aiModuleConfigMapper.selectByIds(collect);

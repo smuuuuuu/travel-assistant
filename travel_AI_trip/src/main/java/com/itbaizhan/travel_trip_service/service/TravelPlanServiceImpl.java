@@ -9,19 +9,19 @@ import com.itbaizhan.travel_trip_service.config.RedisPromptProperties;
 import com.itbaizhan.travel_trip_service.constant.TransConstant;
 import com.itbaizhan.travel_trip_service.constant.TripConstant;
 import com.itbaizhan.travel_trip_service.entity.ChangeTargets;
+import com.itbaizhan.travel_trip_service.mapper.AiTripTokenMapper;
 import com.itbaizhan.travel_trip_service.utils.PromptUtil;
+import com.itbaizhan.travel_trip_service.utils.VerifyUtil;
 import com.itbaizhan.travelcommon.mq.dto.TripProgressEvent;
 import com.itbaizhan.travel_trip_service.sse.TripSseEmitterRegistry;
 import com.itbaizhan.travel_trip_service.utils.MdUtils;
 import com.itbaizhan.travelcommon.AiSessionDto.TravelPlanRequest;
 import com.itbaizhan.travelcommon.AiSessionDto.TravelPlanResponse;
 import com.itbaizhan.travelcommon.pojo.AiModuleConfig;
+import com.itbaizhan.travelcommon.pojo.AiTripToken;
 import com.itbaizhan.travelcommon.result.BusException;
 import com.itbaizhan.travelcommon.result.CodeEnum;
-import com.itbaizhan.travelcommon.service.AiModuleConfigService;
-import com.itbaizhan.travelcommon.service.PromptSelectService;
-import com.itbaizhan.travelcommon.service.TravelPlanService;
-import com.itbaizhan.travelcommon.service.TripsService;
+import com.itbaizhan.travelcommon.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -29,6 +29,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +62,8 @@ public class TravelPlanServiceImpl implements TravelPlanService {
     private String modelChat;
     @Value("${model.precheck}")
     private String modelPrecheck;
-
+    @Autowired
+    private AiTripTokenMapper aiTripTokenService;
     @Autowired
     private TripsService tripsService;
     @Autowired
@@ -86,6 +88,8 @@ public class TravelPlanServiceImpl implements TravelPlanService {
     private AiModuleConfigService aiModuleConfigService;
     @Autowired
     private RedisPromptProperties promptProperties;
+    @Autowired
+    private VerifyUtil verifyUtil;
     @Autowired
     @Qualifier(value = "tripTools")
     private ToolCallbackProvider toolCallbackProvider;
@@ -173,7 +177,7 @@ public class TravelPlanServiceImpl implements TravelPlanService {
                 // Thread.sleep(10000); // 移除模拟延迟，使用真实调用
                 GenerationPrecheckResult changeTargets = null;
                 if(StringUtils.hasText(request.getRawRequirement())){
-                    changeTargets = precheckGenerationRequirement(request.getRawRequirement());
+                    changeTargets = precheckGenerationRequirement(request.getRawRequirement(),tripId,userId);
                     request.setRawRequirement(changeTargets.refinedRequirement);
                 }else {
                     changeTargets = createDefaultChangeTargets();
@@ -182,7 +186,8 @@ public class TravelPlanServiceImpl implements TravelPlanService {
                 String poiCandidatesJson = callChatClientContentWithRetry(
                         buildPoiSearchPrompt(request,changeTargets.changeTargets),
                         request.getDestination(),
-                        () -> publishTripProgressEvent(eventRequest, userId, tripId, TripConstant.GENERATE_TRIP_ID, "progress", "工具调用异常，正在重试检索...", seq.incrementAndGet())
+                        () -> publishTripProgressEvent(eventRequest, userId, tripId, TripConstant.GENERATE_TRIP_ID, "progress", "工具调用异常，正在重试检索...", seq.incrementAndGet()),
+                        tripId,userId
                 );
 
                 poiCandidatesJson = cleanJson(poiCandidatesJson);
@@ -201,7 +206,8 @@ public class TravelPlanServiceImpl implements TravelPlanService {
                 String jsonResult = callChatClientContentWithRetry(
                         promptText,
                         request.getDestination(),
-                        () -> publishTripProgressEvent(eventRequest, userId, tripId, TripConstant.GENERATE_TRIP_ID, "progress", "工具调用异常，正在重试...", seq.incrementAndGet())
+                        () -> publishTripProgressEvent(eventRequest, userId, tripId, TripConstant.GENERATE_TRIP_ID, "progress", "工具调用异常，正在重试...", seq.incrementAndGet()),
+                        tripId,userId
                 );
 
                 jsonResult = cleanJson(jsonResult);
@@ -258,13 +264,20 @@ public class TravelPlanServiceImpl implements TravelPlanService {
      * @param onRetry  预检失败时的重试回调（可为空）
      * @return 预检结果；失败时返回默认对象（不会抛出异常）
      */
-    private RequirementPrecheck precheckModifyInstruction(String question, TravelPlanResponse trip, Runnable onRetry) {
+    private RequirementPrecheck precheckModifyInstruction(String question, TravelPlanResponse trip, Runnable onRetry,String tripId,Long userId) {
         String prompt = buildModifyPrecheckPrompt(question, trip);
         try {
-            String json = callChatClientContentNoToolWithRetry(prompt, onRetry);
+            String json = callChatClientContentNoToolWithRetry(prompt, onRetry,tripId,userId);
             //String json = "\n test \n";
             json = cleanJson(json);
             RequirementPrecheck parsed = objectMapper.readValue(json, RequirementPrecheck.class);
+            /*JSONObject jsonObject = JSONObject.parseObject(json);
+            String refinedRequirement = (String)jsonObject.get("changeTargets");
+            JSONObject changeJson = JSONObject.parseObject(refinedRequirement);
+
+            changeJson.forEach((key, value) -> {
+                parsed.changeTargets().set(key,(Boolean)value);
+            });*/
             return parsed == null ? RequirementPrecheck.empty() : parsed;
         } catch (Exception e) {
             return RequirementPrecheck.empty();
@@ -279,16 +292,23 @@ public class TravelPlanServiceImpl implements TravelPlanService {
      * @param onRetry    重试回调（可为空）
      * @return 模型输出内容（失败时返回空串，不会抛出异常）
      */
-    private String callChatClientContentNoToolWithRetry(String promptText, Runnable onRetry) {
+    private String callChatClientContentNoToolWithRetry(String promptText, Runnable onRetry,String tripId,Long userId) {
         String basePrompt = promptText == null ? "" : promptText;
         for (int attempt = 0; attempt < 2; attempt++) {
             try {
-                return chatClient.prompt(new Prompt(new UserMessage(basePrompt)))
+                long start = System.currentTimeMillis();
+                ChatResponse response = chatClient.prompt(new Prompt(new UserMessage(basePrompt)))
                         .options(DashScopeChatOptions.builder()
                                 .withModel(modelPrecheck)
                                 .build())
                         .call()
-                        .content();
+                        .chatResponse();
+                long end = System.currentTimeMillis();
+                if (response != null && response.getMetadata() != null && response.getMetadata().getUsage() != null) {
+                    Integer totalTokens = response.getMetadata().getUsage().getTotalTokens();
+                    insertAiTripToken(tripId,userId,totalTokens,end - start,TripConstant.DRAFT_TRIP_ID);
+                }
+                return response == null ? "" : response.getResult().getOutput().getText();
             } catch (RuntimeException e) {
                 if (attempt == 0 && onRetry != null) {
                     onRetry.run();
@@ -297,7 +317,7 @@ public class TravelPlanServiceImpl implements TravelPlanService {
         }
         return "";
     }
-    private GenerationPrecheckResult precheckGenerationRequirement(String rawRequirement) {
+    private GenerationPrecheckResult precheckGenerationRequirement(String rawRequirement,String tripId,Long userId) {
         if (rawRequirement == null || rawRequirement.isBlank()) {
             return createDefaultChangeTargets();
         }
@@ -320,7 +340,7 @@ public class TravelPlanServiceImpl implements TravelPlanService {
                 "rawRequirement", rawRequirement
         ));
         try {
-            String json = callChatClientContentNoToolWithRetry(prompt, null);
+            String json = callChatClientContentNoToolWithRetry(prompt, null,tripId,userId);
             /*String json = """
                     {
                     "refinedRequirement" : "不需要提供住宿",
@@ -388,7 +408,15 @@ public class TravelPlanServiceImpl implements TravelPlanService {
         ));
     }
 
-    private String callChatClientContentWithRetry(String promptText, String destination, Runnable onRetry) {
+    /**
+     * 对“需要工具调用”的任务做重试调用，并记录 token 消耗。
+     *
+     * @param promptText  提示词
+     * @param destination 目的地
+     * @param onRetry     重试回调（可为空）
+     * @return 模型输出内容（失败时抛出异常）
+     */
+    private String callChatClientContentWithRetry(String promptText, String destination, Runnable onRetry,String tripId,Long userId) {
         String city = destination == null || destination.isBlank() ? "目的地" : destination.trim();
         String argHint = PromptUtil.renderPromptTemplate(promptService.getPrompt(promptProperties.getArgHint()), Map.of("city",city));
         String quotaHint = promptService.getPrompt(promptProperties.getQuotaHint());
@@ -397,11 +425,18 @@ public class TravelPlanServiceImpl implements TravelPlanService {
         RuntimeException last = null;
         for (int attempt = 0; attempt < 3; attempt++) {
             try {
-                return chatClient.prompt(new Prompt(new UserMessage(composedPrompt)))
+                long start = System.currentTimeMillis();
+                ChatResponse response = chatClient.prompt(new Prompt(new UserMessage(composedPrompt)))
                         .options(DashScopeChatOptions.builder().withModel(modelChat).build())
                         .toolCallbacks(toolCallbackProvider)
                         .call()
-                        .content();
+                        .chatResponse();
+                long end = System.currentTimeMillis();
+                if (response != null && response.getMetadata() != null && response.getMetadata().getUsage() != null) {
+                    Integer totalTokens = response.getMetadata().getUsage().getTotalTokens();
+                    insertAiTripToken(tripId,userId,totalTokens,end - start,TripConstant.MODIFY_TRIP_ID);
+                }
+                return response == null ? "" : response.getResult().getOutput().getText();
             } catch (RuntimeException e) {
                 last = e;
                 if (!isRetryableToolCallError(e) || attempt == 2) {
@@ -418,6 +453,16 @@ public class TravelPlanServiceImpl implements TravelPlanService {
             }
         }
         throw last == null ? new RuntimeException("callChatClientContentWithRetry failed") : last;
+    }
+
+    private void insertAiTripToken(String tripId,Long userId,Integer totalTokens,Long processingTime,Integer type) {
+        AiTripToken aiTripToken  = new AiTripToken();
+        aiTripToken.setTripId(tripId);
+        aiTripToken.setUserid(userId);
+        aiTripToken.setUseToken(totalTokens);
+        aiTripToken.setProcessingTime(processingTime);
+        aiTripToken.setType(type);
+        aiTripTokenService.insert(aiTripToken);
     }
 
     private boolean isRetryableToolCallError(Throwable e) {
@@ -549,26 +594,37 @@ public class TravelPlanServiceImpl implements TravelPlanService {
                 // 2. 执行业务逻辑
 
                 publishTripProgressEvent(eventRequest, userId, tripId, TripConstant.MODIFY_TRIP_ID, "progress", "准备中...", seq.incrementAndGet());
-
+                /*BackupInfo backup = null;
+                try {
+                    backup = tripsService.getBackup(tripId, userId);
+                } catch (BusException e) {
+                    System.out.println(e.getMessage() + "----------------跳过");
+                }*/
                 Thread.sleep(1000);
 
                 publishTripProgressEvent(eventRequest, userId, tripId, TripConstant.MODIFY_TRIP_ID, "progress", "正在分析修改意见...", seq.incrementAndGet());
                 //hread.sleep(10000);
 
-                RequirementPrecheck precheck = precheckModifyInstruction(question, trip, null);
+                RequirementPrecheck precheck = precheckModifyInstruction(question, trip, null,tripId,userId);
                 String precheckHint = buildModifyPrecheckHint(precheck);
                 // 如果用户没有提出具体修改意见，则不将其加入提示词
                 String modificationInstruction = (precheck.normalizedRequirement() == null || precheck.normalizedRequirement().isBlank())
                         ? ((question == null || question.isBlank()) ? "请根据上下文优化当前的旅行计划。": question)
                         : precheck.normalizedRequirement();
                 String prompt = buildModifyPrompt(trip, current, modificationInstruction, precheckHint,precheck.changeTargets);
+                /*if(backup != null) {
+                    prompt = buildModifyPrompt(trip, current, modificationInstruction, precheckHint,precheck.changeTargets);
+                }else {
+                    prompt = buildModifyPrompt(trip, null, modificationInstruction, precheckHint,precheck.changeTargets);
+                }*/
 
                 publishTripProgressEvent(eventRequest, userId, tripId, TripConstant.MODIFY_TRIP_ID, "progress", "正在修改计划...", seq.incrementAndGet());
                 String destination = trip.getDestination();
                 String jsonResult = callChatClientContentWithRetry(
                         prompt,
                         destination,
-                        null
+                        null,
+                        tripId,userId
                 );
                 //Thread.sleep(10000);
                 jsonResult = cleanJson(jsonResult);
@@ -577,8 +633,9 @@ public class TravelPlanServiceImpl implements TravelPlanService {
                     throw new BusException(CodeEnum.TRIP_AI_MODIFY_ERROR);
                 }
                 response.setTripId(tripId);
+                //response.setCompleteStatus(1);
                 response.setIsSave(TripConstant.NO_SAVE);
-                tripsService.insertRedisTravel(response, userId, isBackup);
+                tripsService.insertRedisTravel(response, userId, Objects.equals(isBackup, TripConstant.BACKUP) ? isBackup : TripConstant.NO_BACKUP);
                 flag = true;
                 //tripsService.updateCompleteStatus(tripId, userId, TripConstant.DRAFT_TRIP_ID);
                 publishTripProgressEvent(eventRequest, userId, tripId, TripConstant.MODIFY_TRIP_ID, "done", "已完成", seq.incrementAndGet());
@@ -625,7 +682,7 @@ public class TravelPlanServiceImpl implements TravelPlanService {
                     "\n" +
                     this.getPromptWithChangeTargets(changeTargets, aiModuleConfigService.getAiModuleToolEnable());
         }else {
-            toolRules = promptService.getAllModPrompt(); // TODO: PromptUtil.getAllToolPrompt() may also need update or replacement in future
+            toolRules = promptService.getToolRestriction(); // TODO: PromptUtil.getAllToolPrompt() may also need update or replacement in future
         }
 
         String template = promptService.getPrompt(promptProperties.getModify());
@@ -714,24 +771,38 @@ public class TravelPlanServiceImpl implements TravelPlanService {
                 // 2. 调用 AI 生成 Markdown 内容
                 String prompt = PromptUtil.renderPromptTemplate(promptService.getPrompt(promptProperties.getGenerateMd()),
                         Map.of("tripJson", tripJson));
-
-                String markdownContent = chatClient.prompt(new Prompt(new UserMessage(prompt)))
+                long start = System.currentTimeMillis();
+                ChatResponse chatResponse = chatClient.prompt(new Prompt(new UserMessage(prompt)))
                         .options(DashScopeChatOptions.builder().withModel(modelChat).build())
                         .call()
-                        .content();
-                //String markdownContent = getString();
+                        .chatResponse();
+                long end = System.currentTimeMillis();
+                if (chatResponse != null && chatResponse.getMetadata() != null && chatResponse.getMetadata().getUsage() != null) {
+                    Integer totalTokens = chatResponse.getMetadata().getUsage().getTotalTokens();
+                    insertAiTripToken(tripId,userId,totalTokens,end - start,TripConstant.Complete_trip_ID);
+                }
+                String markdownContent = chatResponse == null ? "" : chatResponse.getResult().getOutput().getText();
 
                 // 3. 上传 Markdown 文件到 MinIO
                 MdFile mdFile = generateAndUploadMarkdown(userId, markdownContent, tripId);
                 String key = redisKeyProperties.buildMdKey(userId, tripId);
                 stringRedisTemplate.opsForValue().set(key, mdFile.url(), 1, TimeUnit.DAYS);
                 tripsService.saveMdUrl(tripId, userId, mdFile.path());
+                //response.setCompleteStatus();
+                //tripsService.updateCompleteStatus(tripId, userId, 2);
+                // 4. 发送结果给前端
+                //sendEvent(emitter, "done", mdFile.url());
+                //emitter.complete();
 
                 publishTripProgressEvent(eventRequest, userId, tripId, TripConstant.PROCESSING_MD_ID, "done", "生成成功", seq.incrementAndGet());
             } catch (Exception e) {
                 status = false;
-                log.error("Error generating markdown for trip: {}", tripId, e);
+
+                log.error("Error generating markdown for trip: " + tripId, e);
+                /*sendEvent(emitter, "error", Map.of("message", "生成攻略失败，请稍后重试"));
+                emitter.completeWithError(e);*/
                 publishTripProgressEvent(eventRequest, userId, tripId, TripConstant.PROCESSING_MD_ID, "error", "生成失败", seq.incrementAndGet());
+
             }finally {
                 if(status){
                     tripsService.updateCompleteStatus(tripId,userId,TripConstant.Complete_trip_ID);
@@ -828,6 +899,10 @@ public class TravelPlanServiceImpl implements TravelPlanService {
      */
     private String buildPoiSearchPrompt(TravelPlanRequest req,ChangeTargets targets) {
         String raw = req == null || req.getRawRequirement() == null ? "" : req.getRawRequirement();
+        
+/*        String diningSection = targets.isEnabled("dining") ? poiDiningPrompt : "";
+        String attractionSection = targets.isEnabled("attraction") ? poiAttractionPrompt : "";*/
+
 
         return PromptUtil.renderPromptTemplate(promptService.getPrompt(promptProperties.getPoiSearch()), Map.of(
                 "gaoDe_type",aiModuleConfigService.getPoiTypeWithAiModuleId(targets.getTargets()),
@@ -847,6 +922,12 @@ public class TravelPlanServiceImpl implements TravelPlanService {
         if(!targets.isAllBoolean(false)){
             prompt = promptService.getAllGenPrompt();
         }else {
+            /*StringBuilder sb = new StringBuilder();
+            for (AiModuleConfig aiModuleConfig : ) {
+                if(targets.isEnabled(aiModuleConfig.getModuleKey())){
+                    sb.append(promptService.getPrompt(aiModuleConfig.getPromptId())).append("\n");
+                }
+            }*/
             prompt = PromptUtil.renderPromptTemplate(promptService.getPrompt(promptProperties.getGenerate())
                     , Map.of("TOOL_RULES", this.getPromptWithChangeTargets(targets,aiModuleConfigService.getAiModuleToolEnable())));
         }
@@ -927,6 +1008,11 @@ public class TravelPlanServiceImpl implements TravelPlanService {
                 emitter.complete();
                 return false;
             }
+            if(verifyUtil.verifyNotAirport(request.getFlightArrAirport()) || verifyUtil.verifyNotAirport(request.getFlightDepAirport())){
+                sendEvent(emitter, "done", Map.of("message", "机场填写错误"));
+                emitter.complete();
+                return false;
+            }
         }
         return true;
     }
@@ -937,6 +1023,13 @@ public class TravelPlanServiceImpl implements TravelPlanService {
         if(travelPlanRequest.getDeparture() == null || travelPlanRequest.getDestination() == null) {
             return false;
         }
+        String dep = travelPlanRequest.getDeparture().endsWith("市") ? travelPlanRequest.getDeparture().trim() :
+                (travelPlanRequest.getDeparture().trim() + "市");
+        String des = travelPlanRequest.getDestination().endsWith("市") ? travelPlanRequest.getDestination().trim() :
+                (travelPlanRequest.getDestination().trim() + "市");
+        if(verifyUtil.verifyNotCity(dep) || verifyUtil.verifyNotCity(des)) {
+            return false;
+        }
         if(travelPlanRequest.getBudget() == null || travelPlanRequest.getPeople() == null) {
             return false;
         }
@@ -945,7 +1038,7 @@ public class TravelPlanServiceImpl implements TravelPlanService {
         }
         return travelPlanRequest.getStartTime() != null;
     }
-    /*public String getString(){
+    public String getString(){
         return """
                 # 上海三日情侣休闲游：外滩夜色、豫园雅韵与舌尖浪漫
                 
@@ -1092,5 +1185,5 @@ public class TravelPlanServiceImpl implements TravelPlanService {
                 > **结语**： \s
                 > 这趟上海三日之旅，既有外滩的璀璨夜色，也有豫园的静谧雅致；既有米其林的精致仪式感，也有街头巷尾的人间烟火。在春寒料峭的三月，与爱人携手漫步于这座摩登与古典交织的城市，每一刻都值得珍藏。
                 """;
-    }*/
+    }
 }

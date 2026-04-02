@@ -31,6 +31,8 @@ public interface TripsMapper extends BaseMapper<Trips> {
     Integer getCompleteStatusInteger(String tripId);
 
     Integer getIsPresentTrip(String tripId,Long userId);
+
+    void deleteTripToken(String tripId);
 }
 
 

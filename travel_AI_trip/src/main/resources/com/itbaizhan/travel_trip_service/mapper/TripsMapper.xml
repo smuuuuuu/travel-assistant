@@ -57,4 +57,8 @@
     <select id="getIsPresentTrip" resultType="int">
         select EXISTS(select 1 from trips where trip_id = #{tripId} and user_id = #{userId})
     </select>
+
+    <update id="deleteTripToken" parameterType="string">
+        UPDATE ai_trip_token set is_del = 1 WHERE trip_id = #{tripId}
+    </update>
 </mapper>

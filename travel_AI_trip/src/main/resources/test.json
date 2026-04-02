@@ -1,0 +1,459 @@
+{
+  "tripId": "fbfaa3a2a7-182-4bbb-b3d2-3a99624lp874",
+  "totalDays": 3,
+  "travelerCount": 2,
+  travelStyle: ["名胜古迹", "情侣"],
+  completeStatus: 1,
+  "title": "徐州历史文化浪漫三日游",
+  "description": "从南京出发，乘坐高铁前往徐州，开启三天两夜的历史文化探索之旅。行程涵盖徐州博物馆、汉文化景区、云龙湖等著名景点，入住高档酒店，体验徐州特色美食。天气方面，1月29日阴转雨夹雪，气温7°C到-1°C；1月30日阴天，气温5°C到-1°C；1月31日阴转晴，气温6°C到-1°C，请注意保暖。",
+  "departure": "南京",
+  "destination": "徐州",
+  "budget": 4000.0,
+  "totalPrice": 0.0,
+  "startDate": "2026-01-29 07:12",
+  "endDate": "2026-01-31 18:00",
+  "notes": "用户想住高档一点的酒店，已选择徐州绿地皇冠假日酒店（五星级）作为住宿。预算4000元足够覆盖交通、住宿、餐饮和景点费用。天气较冷，请注意保暖。",
+  "days": [
+    {
+      "date": "第1天",
+      "title": "历史文化探索日",
+      dateTime: "2026-01-29",
+      "description": "从南京乘坐高铁抵达徐州，参观徐州博物馆和回龙窝历史文化街区，体验徐州历史文化底蕴。",
+      "budgetPlanned": 1200.0,
+      "weather": {
+        "temperature": "7°C/-1°C",
+        "condition": "阴转雨夹雪"
+      },
+      "items": [
+        {
+          "itemType": "transport",
+          "refId": "G2578:20260129071200",
+          "poiType": 0,
+          "startTime": "07:12",
+          "endTime": "08:50",
+          "sort": 1,
+          "note": "乘坐G2578次高铁从南京南站前往徐州东站，历时01:38",
+          "seatClass": "二等座",
+          "votes": 2,
+          "price": 158.0,
+          "totalPrice": 316.0
+        },
+        {
+          "itemType": "poi",
+          "refId": "gd:B02040RCMZ",
+          "poiType": 1,
+          "startTime": "14:00",
+          "endTime": "12:00",
+          "sort": 2,
+          "note": "入住徐州绿地皇冠假日酒店，地址：彭祖大道58号(大龙湖地铁站1号口步行400米)，POI未返回价格，已按预算档位与关键词/types筛选",
+          "seatClass": null,
+          "votes": 1,
+          "price": null,
+          "totalPrice": null
+        },
+        {
+          "itemType": "poi",
+          "refId": "gd:B020400196",
+          "poiType": 0,
+          "startTime": "10:00",
+          "endTime": "12:00",
+          "sort": 3,
+          "note": "参观徐州博物馆，地址：和平路118号，了解徐州历史文化",
+          "seatClass": null,
+          "votes": 1,
+          "price": null,
+          "totalPrice": null
+        },
+        {
+          "itemType": "poi",
+          "refId": "gd:B02040TYOK",
+          "poiType": 0,
+          "startTime": "13:30",
+          "endTime": "15:30",
+          "sort": 4,
+          "note": "游览徐州回龙窝历史文化街区，地址：解放路8号(户部山地铁站3D号口、4号口步行340米)，感受历史文化氛围",
+          "seatClass": null,
+          "votes": 1,
+          "price": null,
+          "totalPrice": null
+        },
+        {
+          "itemType": "poi",
+          "refId": "gd:B0IKNC5RGM",
+          "poiType": 2,
+          "startTime": "18:30",
+          "endTime": "20:00",
+          "sort": 5,
+          "note": "在什一餐厅(苏宁广场店)用餐，地址：锦绣名都1号楼，品尝徐州特色菜",
+          "seatClass": null,
+          "votes": 1,
+          "price": 69.0,
+          "totalPrice": 138.0
+        }
+      ]
+    },
+    {
+      "date": "第2天",
+      "title": "汉文化深度体验",
+      dateTime: "2026-01-30",
+      "description": "深入探索徐州汉文化，参观汉文化景区和龟山汉墓，感受汉代历史文化的魅力。",
+      "budgetPlanned": 1200.0,
+      "weather": {
+        "temperature": "5°C/-1°C",
+        "condition": "阴天"
+      },
+      "items": [
+        {
+          "itemType": "poi",
+          "refId": "gd:B020401JU7",
+          "poiType": 0,
+          "startTime": "09:00",
+          "endTime": "12:00",
+          "sort": 1,
+          "note": "参观徐州汉文化景区，地址：兵马俑路1号，深入了解汉代历史文化",
+          "seatClass": null,
+          "votes": 1,
+          "price": null,
+          "totalPrice": null
+        },
+        {
+          "itemType": "poi",
+          "refId": "gd:B020402EPD",
+          "poiType": 0,
+          "startTime": "13:30",
+          "endTime": "16:00",
+          "sort": 2,
+          "note": "游览龟山汉墓，地址：襄王北路3号，探索汉代墓葬文化",
+          "seatClass": null,
+          "votes": 1,
+          "price": null,
+          "totalPrice": null
+        },
+        {
+          "itemType": "poi",
+          "refId": "gd:B0G2T762R3",
+          "poiType": 2,
+          "startTime": "18:30",
+          "endTime": "20:00",
+          "sort": 3,
+          "note": "在铭家季中餐厅用餐，地址：云龙湖北大堤滨湖新天地步行街西区F区1-101，享受精致中餐",
+          "seatClass": null,
+          "votes": 1,
+          "price": 153.0,
+          "totalPrice": 306.0
+        }
+      ]
+    },
+    {
+      "date": "第3天",
+      "title": "自然风光与返程",
+      dateTime: "2026-01-31",
+      "description": "参观宝莲寺，游览云龙湖旅游景区，享受自然风光，下午返回南京。",
+      "budgetPlanned": 1200.0,
+      "weather": {
+        "temperature": "6°C/-1°C",
+        "condition": "阴转晴"
+      },
+      "items": [
+        {
+          "itemType": "poi",
+          "refId": "gd:B02040RDFT",
+          "poiType": 0,
+          "startTime": "09:00",
+          "endTime": "11:00",
+          "sort": 1,
+          "note": "参观宝莲寺，地址：金山桥经济开发区宝莲寺路5号(蟠桃地铁站3号口步行802米)，感受佛教文化",
+          "seatClass": null,
+          "votes": 1,
+          "price": null,
+          "totalPrice": null
+        },
+        {
+          "itemType": "poi",
+          "refId": "gd:B0FFF4WG7B",
+          "poiType": 0,
+          "startTime": "11:30",
+          "endTime": "14:00",
+          "sort": 2,
+          "note": "游览徐州云龙湖旅游景区，地址：湖中路，欣赏湖光山色",
+          "seatClass": null,
+          "votes": 1,
+          "price": null,
+          "totalPrice": null
+        },
+        {
+          "itemType": "poi",
+          "refId": "gd:B02040368L",
+          "poiType": 2,
+          "startTime": "12:30",
+          "endTime": "13:30",
+          "sort": 3,
+          "note": "在贝维卡音乐餐厅·酒吧用餐，地址：湖南路南湖水街29栋一号101房间，享受音乐餐厅氛围",
+          "seatClass": null,
+          "votes": 1,
+          "price": 83.0,
+          "totalPrice": 166.0
+        },
+        {
+          "itemType": "transport",
+          "refId": "G800:20260129171700",
+          "poiType": 0,
+          "startTime": "17:17",
+          "endTime": "18:45",
+          "sort": 4,
+          "note": "乘坐G800次高铁从徐州东站返回南京南站，历时01:28",
+          "seatClass": "二等座",
+          "votes": 2,
+          "price": 165.0,
+          "totalPrice": 330.0
+        }
+      ]
+    }
+  ],
+  "gaoDes": [
+    {
+      "dedupKey": "gd:B02040RCMZ",
+      "type": 1,
+      "poiId": "B02040RCMZ",
+      "name": "徐州绿地皇冠假日酒店",
+      "pName": "江苏省",
+      "cityName": "徐州市",
+      "address": "彭祖大道58号(大龙湖地铁站1号口步行400米)",
+      "typecode": 100102,
+      "rating": "4.6",
+      "cost": null,
+      "tag": "小吃街,自助早餐,自助餐",
+      "location": "117.263437,34.208277",
+      "entrLocation": "117.262579,34.208507",
+      "tel": "0516-83289999",
+      "photo": {
+        "title": "Logo",
+        "url": "https://store.is.autonavi.com/showpic/bbee6ef13b48cd60d770e006eaf3a7c3"
+      },
+      "startTime": "2026-01-29 14:00",
+      "endTime": "2026-01-31 12:00"
+    },
+    {
+      "dedupKey": "gd:B020400196",
+      "type": 0,
+      "poiId": "B020400196",
+      "name": "徐州博物馆",
+      "pName": "江苏省",
+      "cityName": "徐州市",
+      "address": "和平路118号",
+      "typecode": 140100,
+      "rating": "4.9",
+      "cost": null,
+      "tag": null,
+      "location": "117.186653,34.251058",
+      "entrLocation": "117.185982,34.249914",
+      "tel": "0516-83804412;0516-83804400",
+      "photo": {
+        "title": null,
+        "url": "http://store.is.autonavi.com/showpic/42cbe2f2f922109d74d538bc43ef64a0"
+      },
+      "startTime": "2026-01-29 10:00",
+      "endTime": "2026-01-29 12:00"
+    },
+    {
+      "dedupKey": "gd:B02040TYOK",
+      "type": 0,
+      "poiId": "B02040TYOK",
+      "name": "徐州回龙窝历史文化街区",
+      "pName": "江苏省",
+      "cityName": "徐州市",
+      "address": "解放路8号(户部山地铁站3D号口、4号口步行340米)",
+      "typecode": 061000,
+      "rating": "4.8",
+      "cost": null,
+      "tag": null,
+      "location": "117.190103,34.259018",
+      "entrLocation": "117.189854,34.258645",
+      "tel": null,
+      "photo": {
+        "title": null,
+        "url": "https://aos-comment.amap.com/B02040TYOK/comment/content_media_external_file_100006552_1767960379576_24340474.jpg"
+      },
+      "startTime": "2026-01-29 13:30",
+      "endTime": "2026-01-29 15:30"
+    },
+    {
+      "dedupKey": "gd:B0IKNC5RGM",
+      "type": 2,
+      "poiId": "B0IKNC5RGM",
+      "name": "什一餐厅(苏宁广场店)",
+      "pName": "江苏省",
+      "cityName": "徐州市",
+      "address": "锦绣名都1号楼",
+      "typecode": 050100,
+      "rating": "4.8",
+      "cost": 69.0,
+      "tag": "鸡肉,地锅鸡,特色菜",
+      "location": "117.190889,34.265252",
+      "entrLocation": "117.19092,34.26513",
+      "tel": "17712150111",
+      "photo": {
+        "title": null,
+        "url": "https://aos-comment.amap.com/B0IKNC5RGM/comment/EE2C9730_9CF4_468B_8D82_F0A8B60904E6_L0_001_2000_150_1758256337269_14580846.jpg"
+      },
+      "startTime": "2026-01-29 18:30",
+      "endTime": "2026-01-29 20:00"
+    },
+    {
+      "dedupKey": "gd:B020401JU7",
+      "type": 0,
+      "poiId": "B020401JU7",
+      "name": "徐州汉文化景区",
+      "pName": "江苏省",
+      "cityName": "徐州市",
+      "address": "兵马俑路1号",
+      "typecode": 110200,
+      "rating": "4.7",
+      "cost": null,
+      "tag": null,
+      "location": "117.221212,34.247083",
+      "entrLocation": "117.225252,34.243304",
+      "tel": "0516-83167053;0516-83167000",
+      "photo": {
+        "title": null,
+        "url": "https://aos-comment.amap.com/B020401JU7/comment/6ADBF9E0_A36C_46DF_BFC1_22DB771522E2_L0_001_2000_150_1757997499138_08449116.jpg"
+      },
+      "startTime": "2026-01-30 09:00",
+      "endTime": "2026-01-30 12:00"
+    },
+    {
+      "dedupKey": "gd:B020402EPD",
+      "type": 0,
+      "poiId": "B020402EPD",
+      "name": "龟山汉墓",
+      "pName": "江苏省",
+      "cityName": "徐州市",
+      "address": "襄王北路3号",
+      "typecode": 110202,
+      "rating": "4.8",
+      "cost": null,
+      "tag": null,
+      "location": "117.138295,34.307448",
+      "entrLocation": "117.135767,34.308388",
+      "tel": "0516-85770107",
+      "photo": {
+        "title": null,
+        "url": "http://store.is.autonavi.com/showpic/75497cfbe55c2723625f0377d2b8586c"
+      },
+      "startTime": "2026-01-30 13:30",
+      "endTime": "2026-01-30 16:00"
+    },
+    {
+      "dedupKey": "gd:B0G2T762R3",
+      "type": 2,
+      "poiId": "B0G2T762R3",
+      "name": "铭家季中餐厅",
+      "pName": "江苏省",
+      "cityName": "徐州市",
+      "address": "云龙湖北大堤滨湖新天地步行街西区F区1-101",
+      "typecode": 050000,
+      "rating": "4.5",
+      "cost": 153.0,
+      "tag": "牛肉,三文鱼,牛排",
+      "location": "117.149576,34.247011",
+      "entrLocation": null,
+      "tel": "0516-85857788",
+      "photo": {
+        "title": null,
+        "url": "https://aos-comment.amap.com/B0G2T762R3/comment/content_media_external_file_53741_ss__1763164237502_11756313.jpg"
+      },
+      "startTime": "2026-01-30 18:30",
+      "endTime": "2026-01-30 20:00"
+    },
+    {
+      "dedupKey": "gd:B02040RDFT",
+      "type": 0,
+      "poiId": "B02040RDFT",
+      "name": "宝莲寺",
+      "pName": "江苏省",
+      "cityName": "徐州市",
+      "address": "金山桥经济开发区宝莲寺路5号(蟠桃地铁站3号口步行802米)",
+      "typecode": 110205,
+      "rating": "4.9",
+      "cost": null,
+      "tag": null,
+      "location": "117.268035,34.294512",
+      "entrLocation": "117.268657,34.292479",
+      "tel": null,
+      "photo": {
+        "title": null,
+        "url": "http://store.is.autonavi.com/showpic/21e3a43b8352cf0d26e0493541bf3ec2"
+      },
+      "startTime": "2026-01-31 09:00",
+      "endTime": "2026-01-31 11:00"
+    },
+    {
+      "dedupKey": "gd:B0FFF4WG7B",
+      "type": 0,
+      "poiId": "B0FFF4WG7B",
+      "name": "徐州云龙湖旅游景区",
+      "pName": "江苏省",
+      "cityName": "徐州市",
+      "address": "湖中路",
+      "typecode": 110202,
+      "rating": "4.8",
+      "cost": null,
+      "tag": null,
+      "location": "117.151905,34.237488",
+      "entrLocation": "117.148934,34.230536",
+      "tel": "0516-83960925",
+      "photo": {
+        "title": null,
+        "url": "http://store.is.autonavi.com/showpic/bcb0e77b50bc401daace4f02b91c638b"
+      },
+      "startTime": "2026-01-31 11:30",
+      "endTime": "2026-01-31 14:00"
+    },
+    {
+      "dedupKey": "gd:B02040368L",
+      "type": 2,
+      "poiId": "B02040368L",
+      "name": "贝维卡音乐餐厅·酒吧",
+      "pName": "江苏省",
+      "cityName": "徐州市",
+      "address": "湖南路南湖水街29栋一号101房间",
+      "typecode": 050201,
+      "rating": "4.4",
+      "cost": 83.0,
+      "tag": "油腰,三仁行,福佳白啤,臭干,科罗娜,羊眼,羊球,猪皮,净腰,大红虾,羊肉串,和风鸡肉沙拉,和风萨拉米沙拉,香糟毛豆,香煎三文鱼,美式咖啡,牛排,双人餐,下午茶,牛肉",
+      "location": "117.155251,34.229660",
+      "entrLocation": "117.155367,34.229579",
+      "tel": "0516-83886722;19826006288",
+      "photo": {
+        "title": null,
+        "url": "https://comment-oss-online.oss-cn-wulanchabu.aliyuncs.com/B02040368L/comment/EFF915B2_7D40_4A86_B779_91DCE2EC5759_L0_001_IMG_1633.HEIC"
+      },
+      "startTime": "2026-01-31 12:30",
+      "endTime": "2026-01-31 13:30"
+    }
+  ],
+  "transportations": [
+    {
+      "dedupKey": "G2578:20260129071200",
+      "type": "高铁",
+      "description": "历时01:38，复兴号",
+      "departureLocation": "南京南",
+      "arrivalLocation": "徐州东",
+      "departureTime": "2026-01-29 07:12:00",
+      "arrivalTime": "2026-01-29 08:50:00",
+      "trainNumber": "G2578",
+      "bookingStatus": "PENDING"
+    },
+    {
+      "dedupKey": "G800:20260129171700",
+      "type": "高铁",
+      "description": "历时01:28，复兴号",
+      "departureLocation": "徐州东",
+      "arrivalLocation": "南京南",
+      "departureTime": "2026-01-31 17:17:00",
+      "arrivalTime": "2026-01-31 18:45:00",
+      "trainNumber": "G800",
+      "bookingStatus": "PENDING"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 package com.itbaizhan.travel_trip_service.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.itbaizhan.travel_trip_service.config.RedisPromptProperties;
 import com.itbaizhan.travel_trip_service.entity.mongo.AiPrompt;
 import com.itbaizhan.travel_trip_service.mapper.TripGaodeTypeMapper;
@@ -46,7 +47,9 @@ public class PromptSelectServiceImpl implements PromptSelectService {
     @Override
     public String getAllGaodeType() {
         StringBuilder stringBuilder = new StringBuilder();
-        List<TripGaodeType> tripGaodeTypes = tripGaodeTypeMapper.selectList(null);
+        QueryWrapper<TripGaodeType> queryWrapper = new QueryWrapper<>();
+        queryWrapper.ne("ai_module_id",0);
+        List<TripGaodeType> tripGaodeTypes = tripGaodeTypeMapper.selectList(queryWrapper);
         if(tripGaodeTypes.isEmpty()) {
             return "";
         }
@@ -70,15 +73,17 @@ public class PromptSelectServiceImpl implements PromptSelectService {
         return s;
     }
     @Override
-    public String getAllModPrompt() {
+    public String getToolRestriction() {
         String key = redisPromptProperties.getRedisKey(redisPromptProperties.getAllModify());
         String prompt = stringRedisTemplate.opsForValue().get(key);
         if(StringUtils.hasText(prompt)) {
             return prompt;
         }
 
-        String s = PromptUtil.renderPromptTemplate(this.getPrompt(redisPromptProperties.getModify()),
-                Map.of("TOOL_RULES", getAllTools()));
+        String s = PromptUtil.renderPromptTemplate(this.getPrompt(redisPromptProperties.getToolRestriction()),
+                Map.of("POI_TYPE", this.getAllGaodeType())) +
+                "\n" +
+                this.getAllTools();
         stringRedisTemplate.opsForValue().set(key, s);
         return s;
     }
@@ -146,58 +151,4 @@ public class PromptSelectServiceImpl implements PromptSelectService {
 
         throw new BusException(CodeEnum.TRIP_PROMPT_ERROR);
     }
-
-    /**
-     * 仅根据 Scene 获取内容 (不走映射逻辑，用于兜底或直接查询)
-     */
-    private String getPromptContentOnly(String scene) {
-        try {
-            Optional<AiPrompt> promptOpt = aiPromptRepository.findById(scene);
-            if (promptOpt.isPresent()) {
-                return promptOpt.get().getContent();
-            }
-        } catch (Exception e) {
-             // ignore
-        }
-        return null;
-    }
-
-    /**
-     * 更新映射配置 (管理员修改了 Scene 名称或切换版本时调用)
-     * @param logicalKey 代码中的常量 (如 prompt_accommodation)
-     * @param newRealScene 数据库中新的 Scene (如 prompt_accommodation_v2)
-     */
-    public void updatePromptMapping(String logicalKey, String newRealScene) {
-        //stringRedisTemplate.opsForHash().put(redisKeyProperties.getScenePrompt(), logicalKey, newRealScene);
-    }
-
-    /**
-     * 刷新缓存 (当后台更新 Prompt 内容时调用)
-     */
-    @Override
-    public void refreshCache(String scene) {
-        String cacheKey = redisPromptProperties.getRedisKey(scene);
-        stringRedisTemplate.delete(cacheKey);
-    }
-    
-    /**
-     * 创建或更新 Prompt (供后台管理使用)
-     */
-    @Override
-    public void savePrompt(String scene, String content, String description) {
-        AiPrompt prompt = aiPromptRepository.findById(scene).orElse(new AiPrompt());
-        prompt.setScene(scene);
-        prompt.setContent(content);
-        prompt.setDescription(description);
-        prompt.setIsActive(true);
-        if (prompt.getId() == null) {
-            // 新增时设置初始版本
-            prompt.setVersion("v1.0.0");
-        }
-        // TODO: 版本号递增逻辑可根据需求完善
-        
-        aiPromptRepository.save(prompt);
-        refreshCache(scene);
-    }
-
 }

@@ -12,6 +12,7 @@ import com.itbaizhan.travel_trip_service.mapper.*;
 import com.itbaizhan.travel_trip_service.utils.BackupUtil;
 import com.itbaizhan.travel_trip_service.utils.DedupKeyUtils;
 import com.itbaizhan.travel_trip_service.utils.MdUtils;
+import com.itbaizhan.travel_trip_service.utils.VerifyUtil;
 import com.itbaizhan.travelcommon.AiSessionDto.TravelPlanResponse;
 import com.itbaizhan.travelcommon.info.BackupDetails;
 import com.itbaizhan.travelcommon.info.BackupInfo;
@@ -79,6 +80,8 @@ public class TripsServiceImpl implements TripsService {
     private TripBackupMapper tripBackupMapper;
     @Autowired
     private TripSseEmitterRegistry emitterRegistry;
+    @Autowired
+    private VerifyUtil verifyUtil;
 
     private static final String ZSET_SCRIPT = """
         local zset = KEYS[1]
@@ -283,6 +286,9 @@ public class TripsServiceImpl implements TripsService {
     public TravelPlanResponse getTripById(String tripId,Long userId) {
         String key = redisKeyProperties.buildPlanKey(userId,tripId);
         Object o = redisTemplate.opsForValue().get(key);
+        if (verifyUtil.verifyObject(o)){
+            throw new BusException(CodeEnum.TRIP_NOT_FOUND);
+        }
         if(o instanceof TravelPlanResponse cached) {
             if (cached.getTravelStyle() != null) {
                 return cached;
@@ -293,6 +299,7 @@ public class TripsServiceImpl implements TripsService {
         queryWrapper.eq("trip_id",tripId);
         Trips trips = tripsMapper.selectOne(queryWrapper);
         if(Objects.isNull(trips)){
+            redisTemplate.opsForValue().set(key,"null",randomTime(),TimeUnit.MINUTES);
             throw new BusException(CodeEnum.TRIP_NOT_FOUND);
         }
         if (trips.getTravelStyle() == null) {
@@ -375,7 +382,7 @@ public class TripsServiceImpl implements TripsService {
             travelPlanResponse.setGaoDes(tripGaoDeMapper.selectList(wrapperPoi));
         }
         travelPlanResponse.setIsSave(TripConstant.SAVE);
-        redisTemplate.opsForValue().set(redisKeyProperties.buildPlanKey(userId, tripId),travelPlanResponse,1,TimeUnit.DAYS);
+        redisTemplate.opsForValue().set(redisKeyProperties.buildPlanKey(userId, tripId),travelPlanResponse,randomTime(),TimeUnit.MINUTES);
         return travelPlanResponse;
     }
 
@@ -384,6 +391,9 @@ public class TripsServiceImpl implements TripsService {
     public BackupInfo getBackup(String tripId, Long userId) {
         String key = redisKeyProperties.buildBackupPlanKey(userId, tripId);
         Object o = redisTemplate.opsForValue().get(key);
+        if(verifyUtil.verifyObject(o)){
+            throw new BusException(CodeEnum.TRIP_BACKUP_NOT_ERROR);
+        }
         LocalDateTime expire = null;
         TravelPlanResponse response = null;
         BackupInfo backupInfo = new BackupInfo();
@@ -403,7 +413,8 @@ public class TripsServiceImpl implements TripsService {
             queryWrapper.eq("user_id", userId);
             TripBackup tripBackup = tripBackupMapper.selectOne(queryWrapper);
             if(Objects.isNull(tripBackup)){
-                throw new BusException(CodeEnum.TRIP_BACKUP_EXPIRE_ERROR);
+                redisTemplate.opsForValue().set(key, "null",randomTime(),TimeUnit.MINUTES);
+                throw new BusException(CodeEnum.TRIP_BACKUP_NOT_ERROR);
             }
             if(LocalDateTime.now().isAfter(tripBackup.getExpireAt())){
                 this.deleteMysqlBack(tripId,userId);
@@ -422,7 +433,7 @@ public class TripsServiceImpl implements TripsService {
             backupDetails.setExpireTime(expire);
             backupDetails.setTravelPlanResponse(response);
             backupDetails.setObjectKey(tripBackup.getObjectKey());
-            redisTemplate.opsForValue().set(key,backupDetails,1,TimeUnit.DAYS);
+            redisTemplate.opsForValue().set(key,backupDetails,randomTime(),TimeUnit.MINUTES);
         }
 
         Duration duration = Duration.between(LocalDateTime.now(), expire);
@@ -469,6 +480,9 @@ public class TripsServiceImpl implements TripsService {
     protected void handleBackup(String tripId,Long userId,Double score,boolean isRestore){
         String backupPlanKey = redisKeyProperties.buildBackupPlanKey(userId, tripId);
         Object object = redisTemplate.opsForValue().get(backupPlanKey);
+        if(verifyUtil.verifyObject(object)){
+            throw new BusException(CodeEnum.TRIP_BACKUP_NOT_ERROR);
+        }
         BackupDetails backupDetails = (object == null ? null : (BackupDetails) object);
         TravelPlanResponse response = null;
         QueryWrapper<TripBackup> queryWrapper = new QueryWrapper<>();
@@ -523,7 +537,7 @@ public class TripsServiceImpl implements TripsService {
             redisTemplate.delete(mdKey);
         }
         String key = redisKeyProperties.buildPlanKey(userId, tripId1);
-        redisTemplate.opsForValue().set(key,response,1,TimeUnit.DAYS);
+        redisTemplate.opsForValue().set(key,response,randomTime(),TimeUnit.MINUTES);
         if(TripConstant.SAVE.equals(response.getIsSave()) && !isRestore && score != null){
             redisTemplate.delete(backupPlanKey);
             tripBackupMapper.delete(queryWrapper);
@@ -584,6 +598,7 @@ public class TripsServiceImpl implements TripsService {
         queryWrapper.eq("userId",userId);
         TripBackup tripBackup = tripBackupMapper.selectOne(queryWrapper);
         if(tripBackup == null){
+            redisTemplate.opsForValue().set(redisKeyProperties.buildBackupPlanKey(userId,tripId), "null",randomTime(),TimeUnit.MINUTES);
             throw new BusException(CodeEnum.TRIP_BACKUP_NOT_ERROR);
         }
         //tripBackupMapper.delete(queryWrapper);
@@ -669,10 +684,10 @@ public class TripsServiceImpl implements TripsService {
     @Override
     @TripLocks(user = LockMode.READ, trip = LockMode.READ,backup = LockMode.READ, userIdIndex = 1, tripIdIndex = 0, waitMillis = 0, leaseMillis = 15000)
     public void insertRedisTravel(TravelPlanResponse travelPlanResponse, Long userId,Integer isBackup) {
-        Integer isPresentTrip = tripsMapper.getIsPresentTrip(travelPlanResponse.getTripId(), userId);
+        /*Integer isPresentTrip = tripsMapper.getIsPresentTrip(travelPlanResponse.getTripId(), userId);
         if(isPresentTrip == null || isPresentTrip == 0){
             throw new BusException(CodeEnum.TRIP_NOT_FOUND);
-        }
+        }*/
         checkTravelPlanResponse(travelPlanResponse);
         travelPlanResponse.setCompleteStatus(TripConstant.DRAFT_TRIP_ID);
         travelPlanResponse.setIsSave(TripConstant.NO_SAVE);
@@ -691,7 +706,7 @@ public class TripsServiceImpl implements TripsService {
                 }
                 backupInfo.setExpireTime(LocalDateTime.now().plusDays(7));
                 backupInfo.setTravelPlanResponse(response);
-                redisTemplate.opsForValue().set(redisKeyProperties.buildBackupPlanKey(userId, travelPlanResponse.getTripId()), backupInfo,7, TimeUnit.DAYS);
+                redisTemplate.opsForValue().set(redisKeyProperties.buildBackupPlanKey(userId, travelPlanResponse.getTripId()), backupInfo,randomTime(), TimeUnit.MINUTES);
                 //redisTemplate.opsForValue().set(key,travelPlanResponse,7, TimeUnit.DAYS);
                 updateTrip(response.getTripId(),userId,TripConstant.BACKUP);
                 mdUrl.add(redisKeyProperties.buildBackupMdKey(userId,travelPlanResponse.getTripId()));
@@ -704,7 +719,7 @@ public class TripsServiceImpl implements TripsService {
         mdUrl.add(redisKeyProperties.buildMdKey(userId, travelPlanResponse.getTripId()));
         redisTemplate.delete(mdUrl);
 
-        redisTemplate.opsForValue().set(key,travelPlanResponse,1, TimeUnit.DAYS);
+        redisTemplate.opsForValue().set(key,travelPlanResponse,randomTime(), TimeUnit.MINUTES);
 
     }
     @Override
@@ -714,6 +729,9 @@ public class TripsServiceImpl implements TripsService {
         Object object = redisTemplate.opsForValue().get(redisKeyProperties.buildBackupPlanKey(userId, tripId));
         if(object == null){
             return;
+        }
+        if(verifyUtil.verifyObject(object)){
+            throw new BusException(CodeEnum.TRIP_BACKUP_NOT_ERROR);
         }
         BackupDetails backupDetails = (BackupDetails) object;
         String jsonString = JSON.toJSONString(backupDetails.getTravelPlanResponse());
@@ -779,10 +797,13 @@ public class TripsServiceImpl implements TripsService {
     public void updateCompleteStatus(String tripId, Long userId,Integer status){
         String key = redisKeyProperties.buildPlanKey(userId, tripId);
         Object object = redisTemplate.opsForValue().get(key);
+        if(verifyUtil.verifyObject(object)){
+            throw new BusException(CodeEnum.TRIP_NOT_FOUND);
+        }
         if(object != null){
             TravelPlanResponse response = (TravelPlanResponse) object;
             response.setCompleteStatus(status);
-            redisTemplate.opsForValue().set(key,response,1, TimeUnit.DAYS);
+            redisTemplate.opsForValue().set(key,response,7, TimeUnit.DAYS);
         }
         String syncQueueMember = buildSyncQueueMember(userId, tripId, TripConstant.NO_BACKUP);
         Double score = redisTemplate.opsForZSet().score(redisKeyProperties.getSyncQueue(), syncQueueMember);
@@ -1154,6 +1175,8 @@ public class TripsServiceImpl implements TripsService {
                     tripMdMapper.delete(wrapper);
                     String mdKey = redisKeyProperties.buildMdKey(userId, tripId);
                     redisTemplate.delete(mdKey);
+                    /*String urlMd = mdUtils.getTemporaryUrlMd(tripMd.getObjectKey());
+                    redisTemplate.delete(urlMd);*/
                 }
             }
         }
@@ -1176,7 +1199,24 @@ public class TripsServiceImpl implements TripsService {
             return url;
         }
         return null;
+       /* QueryWrapper<TripBackup> wrapper = new QueryWrapper<>();
+        wrapper.eq("trip_id", tripId);
+        BackupInfo backup = this.getBackup(tripId, userId);
+        if(backup != null && backup.getObjectKey() != null){
+            String urlMd = mdUtils.getTemporaryUrlMd(backup.getObjectKey());
+            redisTemplate.opsForValue().set(key,urlMd,1, TimeUnit.DAYS);
+            return urlMd;
+        }*/
     }
+    /*private void insertBackupMd(String tripId, Long userId, String objectKey) {
+        String key = redisKeyProperties.buildMdKey(userId, tripId) + ":" + TripConstant.BACKUP;
+        String urlMd = mdUtils.getTemporaryUrlMd(objectKey);
+        stringRedisTemplate.opsForValue().set(key, urlMd, 1, TimeUnit.DAYS);
+    }
+    private void delBackupMd(String tripId, Long userId, String objectKey) {
+        String key = redisKeyProperties.buildMdKey(userId, tripId) + ":" + TripConstant.BACKUP;
+        redisTemplate.delete(key);
+    }*/
 
     private String normalizeUrl(String value) {
         if (!StringUtils.hasText(value)) return value;
@@ -1365,6 +1405,9 @@ public class TripsServiceImpl implements TripsService {
     private TravelPlanResponse getBackupResponse(String tripId, Long userId) {
         String key = redisKeyProperties.buildBackupPlanKey(userId, tripId);
         Object o = redisTemplate.opsForValue().get(key);
+        if(verifyUtil.verifyObject(o)){
+            return null;
+        }
         TravelPlanResponse response = null;
         if(o != null) {
             BackupDetails backupDetails = (BackupDetails) o;
@@ -1394,6 +1437,9 @@ public class TripsServiceImpl implements TripsService {
     private String getBackObjectKey(String tripId,Long userId) {
         String key = redisKeyProperties.buildBackupPlanKey(userId, tripId);
         Object object = redisTemplate.opsForValue().get(key);
+        if(verifyUtil.verifyObject(object)){
+            return null;
+        }
         if(object != null){
             return ((BackupDetails) object).getObjectKey();
         }
@@ -1501,5 +1547,9 @@ public class TripsServiceImpl implements TripsService {
         travelPlanResponse.setTransportations(transportations);
         travelPlanResponse.setGaoDes(tripGaoDes);
 
+    }
+
+    public Long randomTime(){
+        return (long) (60 * 24 + new Random().nextInt(60));
     }
 }

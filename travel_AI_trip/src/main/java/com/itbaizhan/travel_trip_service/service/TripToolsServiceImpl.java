@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
@@ -104,7 +105,7 @@ public class TripToolsServiceImpl implements TripToolsService {
             }else {
                 key = redisKeyProperties.buildHighKey(trainsDto.getFromCity(), trainsDto.getToCity(), trainsDto.getDate().toString());
             }
-            redisTemplate.opsForValue().set(key, directTrainInfos,1, TimeUnit.DAYS);
+            redisTemplate.opsForValue().set(key, directTrainInfos,getRemainingMinutes(),TimeUnit.MINUTES);
             return  filterTime(trainsDto.getType(),directTrainInfos,trainsDto.getStartTime(),trainsDto.getEndTime());
         }
         return directTrainInfos;
@@ -358,7 +359,7 @@ public class TripToolsServiceImpl implements TripToolsService {
                             flightDetail.setDedupKey(key);
                         }).toList());
                         String key = redisKeyProperties.buildFlightKey(list.get(0), list.get(1), transDto.getDate().toString());
-                        redisTemplate.opsForValue().set(key, flightDetails, 1, TimeUnit.DAYS);
+                        redisTemplate.opsForValue().set(key, flightDetails, getRemainingMinutes(),TimeUnit.MINUTES);
                     }
                 }
             } catch (Exception e) {
@@ -403,7 +404,8 @@ public class TripToolsServiceImpl implements TripToolsService {
                 train.setDedupkey(key);
             });
             String key = redisKeyProperties.buildFlightItinerariesKey(list.get(0), list.get(1), flightDto.getDate().toString());
-            redisTemplate.opsForValue().set(key,trains,1,TimeUnit.DAYS); //
+
+            redisTemplate.opsForValue().set(key,trains,getRemainingMinutes(),TimeUnit.MINUTES); //
         }
         return trains;
     }
@@ -452,14 +454,29 @@ public class TripToolsServiceImpl implements TripToolsService {
                         String key1 = DedupKeyUtils.buildPoiDedupKey(s);
                         s.setDedupKey(key1);
                     }).toList());
-                    redisTemplate.opsForValue().set(key,gaoDeInfos,7,TimeUnit.DAYS);
+                    redisTemplate.opsForValue().set(key,gaoDeInfos,random() ,TimeUnit.DAYS);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new BusException(CodeEnum.TRIP_SEARCH_ERROR);
             }
         }
+        if(gaoDeInfos.isEmpty()){
+            redisTemplate.opsForValue().set(key, gaoDeInfos, 60, TimeUnit.MINUTES); // 缓存空结果，防止重复请求
+        }
         return gaoDeInfos;
     }
 
+    Random random = new Random();
+
+    public int random(){
+
+        return 5 + random.nextInt(5);
+    }
+    public Long getRemainingMinutes(){
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime midnight = now.toLocalDate().atTime(LocalTime.MIDNIGHT).plusDays(1);
+        long minutes = Duration.between(now, midnight).toMinutes();
+        return minutes + (long) random();
+    }
 }

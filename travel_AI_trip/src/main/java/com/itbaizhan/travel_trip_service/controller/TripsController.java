@@ -1,5 +1,6 @@
 package com.itbaizhan.travel_trip_service.controller;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.alibaba.fastjson2.JSON;
 import com.itbaizhan.travel_trip_service.config.RedisKeyProperties;
@@ -9,9 +10,12 @@ import com.itbaizhan.travelcommon.AiSessionDto.TravelPlanRequest;
 import com.itbaizhan.travelcommon.AiSessionDto.TravelPlanResponse;
 import com.itbaizhan.travelcommon.info.BackupInfo;
 import com.itbaizhan.travelcommon.result.BaseResult;
+import com.itbaizhan.travelcommon.result.BusException;
+import com.itbaizhan.travelcommon.result.CodeEnum;
 import com.itbaizhan.travelcommon.service.TravelPlanService;
 import com.itbaizhan.travelcommon.service.TripsService;
 import com.itbaizhan.travelcommon.util.JWTUtil;
+import com.itbaizhan.travelcommon.util.SensitiveTextUtil;
 import com.itbaizhan.travelcommon.vo.TripVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,23 +42,34 @@ public class TripsController {
     private RedisTemplate<String, Object> redisTemplate;
     @Autowired
     private RedisKeyProperties redisKeyProperties;
+    @Autowired
+    private SensitiveTextUtil sensitiveTextUtil;
+
+    public String tripBlockHandle(){
+        return "目前访问人数过多，请稍后再试";
+    }
+
 
     @PostMapping(value = "/plan", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @SentinelResource(value = "generatePlanStream", blockHandler = "tripBlockHandle")
     public SseEmitter generatePlanStream(@RequestBody TravelPlanRequest request,
                                          @RequestHeader("Authorization") String authorization
     ) {
         Map<String, Object> verify = verifyToken(authorization);
+        sensitiveTextUtil.checkTravelPlanRequest(request);
         SseEmitter emitter = new SseEmitter(10 * 60 * 1000L);
         travelPlanService.generatePlanStream(request, emitter, (Long) verify.get("userId"));
         return emitter;
     }
 
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @SentinelResource(value = "chatPlanStream", blockHandler = "tripBlockHandle")
     public SseEmitter chat(@RequestBody ChatDto chatDto,
                            @RequestHeader("Authorization") String authorization){
         Map<String, Object> stringObjectMap = verifyToken(authorization);
+        sensitiveTextUtil.checkChatDto(chatDto);
         if(!StringUtils.hasText(chatDto.getCurrent())){
-
+            throw new BusException(CodeEnum.TRIP_AI_MODIFY_ERROR);
         }
         if(chatDto.getIsBackup() == null){
             chatDto.setIsBackup(TripConstant.NO_BACKUP);
@@ -155,10 +170,9 @@ public class TripsController {
         return BaseResult.success();
     }
     @DeleteMapping("/clear")
-    public BaseResult<?> clearTripsByUserId(@RequestParam("userId") Long userId
-            ,@RequestHeader("Authorization") String authorization) {
-        verifyToken(authorization);
-        tripsService.clear(userId);
+    public BaseResult<?> clearTripsByUserId(@RequestHeader("Authorization") String authorization) {
+        Map<String, Object> map = verifyToken(authorization);
+        tripsService.clear((Long) map.get("userId"));
         return BaseResult.success();
     }
     @GetMapping("/getBackup")
@@ -200,6 +214,7 @@ public class TripsController {
         return BaseResult.success();
     }
     @GetMapping("/generateMd")
+    @SentinelResource(value = "mdPlanStream", blockHandler = "tripBlockHandle")
     public SseEmitter generateMd(@RequestParam String tripId,
                                        @RequestHeader("Authorization") String authorization) {
         Map<String, Object> map = verifyToken(authorization);
