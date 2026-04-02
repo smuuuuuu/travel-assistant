@@ -1,0 +1,174 @@
+#server:
+#  port: 9003
+#logging:
+#  pattern:
+#    console: '%d{HH:mm:ss.SSS}%clr(%-5level) --- [%-15thread]%cyan(%-50logger{50}):%msg%n'
+#  level:
+#    org.springframework.ai: debug
+#    com.alibaba.dashscope.api: debug
+#    com.alibaba.cloud.ai.dashscope.chat: debug
+#    com.alibaba.cloud.ai.tool: debug
+#
+#model:
+#  chat: "qwen3-max-2026-01-23"
+#  precheck: "glm-4.7"
+#
+#management:
+#  health:
+#    elasticsearch:
+#      enabled: false  # 关闭 ES 健康检查
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "*"
+#  endpoint:
+#    health:
+#      show-details: always
+#
+#spring:
+#  boot:
+#    admin:
+#      client:
+#        url: http://localhost:9090
+#        instance:
+#          prefer-ip: true
+#        connect-timeout: 10000
+#        read-timeout: 10000
+#  mvc:
+#    async:
+#      request-timeout: 600000
+#  ai:
+#    #    ollama:
+#    #      base-url: http://localhost:11434
+#    #      chat:
+#    #        model: qwen3:30b
+#    dashscope:
+#      api-key: {your-api-key}
+#      read-timeout: 300000
+#    #      chat:
+#    #        options:
+#    #          model: qwen3-max-2026-01-23
+#    mcp:
+#      client:
+#        enabled: true
+#        type: async
+#        request-timeout: 300s
+#        stdio:
+#          servers-configuration: classpath:mcp-server-config.json5
+#  #        streamable-http:
+#  #          connections:
+#  #            aigohotel-mcp:
+#  #              url: https://mcp.api-inference.modelscope.net/210d48cd691d44
+#  #        streamable-http:
+#  #          connections:
+#  #            aigohotel-mcp:
+#  #              url: https://mcp.aigohotel.com/mcp
+#  #              headers:
+#  #                Authorization: "Bearer mcp_98c5da5e28ff4e839c09d5b5cd7d07bf"
+#  #                Content-Type: application/json
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://192.168.66.119:3306/travel_assistant?serverTimezone=UTC
+#    username: root
+#    password: root
+#  application:
+#    name: travel_Ai_trip
+#  cloud:
+#    nacos:
+#      discovery:
+#        server-addr: 192.168.66.119:8848
+#    sentinel:
+#      transport:
+#        dashboard: 192.168.66.119:8858
+#  data:
+#    mongodb:
+#      host: 192.168.66.119
+#      port: 27017
+#      database: travel_prompt
+#    redis:
+#      host: 192.168.66.119
+#      port: 6379
+#      timeout: 10000
+#      jedis:
+#        pool:
+#          max-idle: 8
+#          max-wait: 5000
+#          max-active: 8
+#          min-idle: 2
+#  mandatory-file-encoding: utf-8
+#
+#dubbo:
+#  application:
+#    name: travel_trip_service
+#    serialize-check-status: DISABLE
+#    check-serializable: false
+#  protocol:
+#    name: dubbo
+#    port: -1
+#  registry:
+#    address: nacos://192.168.66.119:8848
+#
+#mybatis-plus:
+#  global-config:
+#    db-config:
+#      id-type: auto
+#  configuration:
+#    map-underscore-to-camel-case: false
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#
+#rocketmq:
+#  name-server: 192.168.66.119:9876
+#  producer:
+#    group: my_group1
+#    send-message-timeout: 3000
+#demo:
+#  rocketmq:
+#    topic: trip_generate_queue
+#    consumerGroup: trip_consumer
+#method:
+#  getStationCode: "get-station-code-by-names"
+#  getTickets: "get-tickets"
+#  searchFlightItineraries: "searchFlightItineraries"
+#  searchFlightsByDepArr: "searchFlightsByDepArr"
+#  mapsWeather: "maps_weather"
+#  mapsTextSearch: "maps_text_search"
+#  mapsAroundSearch: "maps_around_search"
+#redis:
+#  key:
+#    hot: "trip:host"
+#    plan: "trip:plan:"
+#    planCount: "trip:plan:generating:"
+#    md: "trip:md:"
+#    syncQueue: "trip:sync:queue"
+#    stationCode: "trip:stationCode"
+#    cityCode: "trip:cityCode"
+#    transportation: "trip:transportation"
+#    gaoDe: "trip:gaoDe"
+#    iataCode: "trip:iataCode"
+#    poi: "trip:poi:"
+#    train: "trip:train:"
+#    highSpeed: "trip:high:"
+#    flightItineraries: "trip:flightItineraries:"
+#    flight: "trip:flight:"
+#    accommodation: "trip:accommodation:"
+#    scenic: "trip:scenic:"
+#    catering: "trip:catering:"
+#    tripVo: "trip:tripVo:"
+#    aiModuleEnable: "ai:module:enable"
+#  prompt:
+#    normal: "ai:prompt:"
+#    modify: "prompt_modify"
+#    generate: "prompt_generate"
+#    toolRestriction: "prompt_tool_restriction"
+#    allTool: "all_tool"
+#    allModify: "all_modify"
+#    allGenerate: "all_generate"
+#    precheckModify: "prompt_precheck_modify"
+#    precheckGeneration: "prompt_precheck_generate"
+#    generateMd: "prompt_generate_md"
+#    poiSearch: "prompt_search"
+#    argHint: "prompt_arghint"
+#    quotaHint: "prompt_quotahint"
+#ai:
+#  prompt:
+#    system: "你是一个专业的智能旅行规划助手（Travel AI Agent）。你的核心职责是协助后台系统生成精准的结构化旅行数据。在处理具体任务时，请严格遵守用户输入的 Prompt 指令，优先调用提供的工具（Tools）获取真实数据，并按要求的格式（如 JSON）输出结果，不要输出多余的寒暄或解释性文字。"
