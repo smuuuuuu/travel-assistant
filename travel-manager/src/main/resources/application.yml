@@ -1,0 +1,122 @@
+#server:
+#  port: 8005
+#
+#logging:
+#  pattern:
+#    console: '%d{HH:mm:ss.SSS}%clr(%-5level) --- [%-15thread]%cyan(%-50logger{50}):%msg%n'
+#  level:
+#    org.springframework.data.mongodb: info
+#    org.springframework.ai: debug
+#    com.alibaba.dashscope.api: debug
+#    com.alibaba.cloud.ai.dashscope.chat: debug
+#    com.alibaba.cloud.ai.tool: debug
+#
+#management:
+#  health:
+#    elasticsearch:
+#      enabled: false  # 关闭 ES 健康检查
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "*"
+#  endpoint:
+#    health:
+#      show-details: always
+#
+#spring:
+#  boot:
+#    admin:
+#      client:
+#        url: http://localhost:9090
+#        instance:
+#          prefer-ip: true
+#        connect-timeout: 10000
+#        read-timeout: 10000
+#  servlet:
+#    multipart:
+#      max-file-size: 50MB
+#      max-request-size: 50MB
+#  application:
+#    name: travel_manager
+#  cloud:
+#    nacos:
+#      discovery:
+#        server-addr: 192.168.66.119:8848
+#  ai:
+#    vectorstore:
+#      qdrant:
+#        host: 192.168.66.119
+#        port: 6334
+#        collection-name: travel
+#    dashscope:
+#      embedding:
+#        api-key: {your_api_key}
+#        options:
+#          dimensions: 1536
+#          model: text-embedding-v2
+#      api-key: {your_api_key}
+#      read-timeout: 300000
+#      chat:
+#        options:
+#          model: glm-4.7
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://192.168.66.119:3306/travel_assistant?serverTimezone=UTC
+#    username: root
+#    password: root
+#  data:
+#    redis:
+#      host: 192.168.66.119
+#      port: 6379
+#      timeout: 30000
+#      jedis:
+#        pool:
+#          max-idle: 8
+#          max-wait: -1
+#          max-active: 8
+#          min-idle: 0
+#    mongodb:
+#      host: 192.168.66.119
+#      port: 27017
+#      database: travel_prompt
+#
+#dubbo:
+#  application:
+#    name: travel_manager
+#    serialize-check-status: DISABLE
+#    check-serializable: false
+#  protocol:
+#    name: dubbo
+#    port: -1
+#  registry:
+#    address: nacos://192.168.66.119:8848
+#
+## Same property paths as travel_AI_trip (RedisPromptProperties / RedisKeyProperties). Copy the `redis:` subtree from
+## Nacos `travel_trip-{profile}.yaml` into `travel_manager-{profile}.yaml`, or set the env vars below so prompt/module cache invalidation hits the same keys.
+#redis:
+#  key:
+#    hot: "trip:host"
+#    stationCode: "trip:stationCode"
+#    cityCode: "trip:cityCode"
+#    iataCode: "trip:iataCode"
+#    poi: "trip:poi:"
+#    aiModuleEnable: "ai:module:enable"
+#  prompt:
+#    agentNextStep: "travel:next:step"
+#    normal: "ai:prompt:"
+#    allTool: "all_tool"
+#    allModify: "all_modify"
+#    allGenerate: "all_generate"
+#
+#mybatis-plus:
+#  global-config:
+#    db-config:
+#      id-type: auto
+#  configuration:
+#    map-underscore-to-camel-case: false
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#
+#manager:
+#  jwt:
+#    secret: ${MANAGER_JWT_SECRET:change-me-manager-jwt-secret-min-32-chars!!}
+#    expiration-hours: ${MANAGER_JWT_EXPIRATION_HOURS:12}
