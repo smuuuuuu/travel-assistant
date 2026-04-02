@@ -1,0 +1,147 @@
+#server:
+#  port: 8004
+#
+#logging:
+#  pattern:
+#    console: '%d{HH:mm:ss.SSS}%clr(%-5level) --- [%-15thread]%cyan(%-50logger{50}):%msg%n'
+#  level:
+#    org.springframework.ai: debug
+#    com.alibaba.dashscope.api: debug
+#    com.alibaba.cloud.ai.dashscope.chat: debug
+#
+#management:
+#  health:
+#    elasticsearch:
+#      enabled: false  # 关闭 ES 健康检查
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "*"
+#  endpoint:
+#    health:
+#      show-details: always
+#
+#spring:
+#  boot:
+#    admin:
+#      client:
+#        url: http://localhost:9090
+#        username: admin
+#        password: 123456
+#        instance:
+#          prefer-ip: true
+#        connect-timeout: 10000
+#        read-timeout: 10000
+#  application:
+#    name: travel_Ai_Assistant
+#  servlet:
+#    multipart:
+#      max-file-size: 50MB
+#      max-request-size: 50MB
+#  cloud:
+#    nacos:
+#      discovery:
+#        server-addr: 192.168.66.119:8848
+#    sentinel:
+#      transport:
+#        dashboard: 192.168.66.119:8858
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://192.168.66.119:3306/travel_assistant?serverTimezone=UTC
+#    username: root
+#    password: root
+#  data:
+#    redis:
+#      host: 192.168.66.119
+#      port: 6379
+#  ai:
+#    imageOption: "qwen-vl-plus"
+#    vectorstore:
+#      qdrant:
+#        host: 192.168.66.119
+#        port: 6334
+#        collection-name: travel
+#        similarity-search:
+#          threshold: 0.7
+#    dashscope:
+#      api-key: {your_dashscope_api_key}
+#      read-timeout: 300000
+#      chat:
+#        options:
+#          model: qwen3-max
+#      embedding:
+#        api-key: {your_dashscope_embedding_api_key}
+#        options:
+#          model: text-embedding-v2
+#          dimensions: 1536
+#    memory:
+#      redis:
+#        host: 192.168.66.119
+#        port: 6379
+#        timeout: 5000
+#dubbo:
+#  application:
+#    name: travel_Ai_Assistant
+#    serialize-check-status: DISABLE
+#    check-serializable: false
+#  protocol:
+#    name: dubbo
+#    port: -1
+#  registry:
+#    address: nacos://192.168.66.119:8848
+#
+#mybatis-plus:
+#  global-config:
+#    db-config:
+#      id-type: auto
+#  configuration:
+#    map-underscore-to-camel-case: false
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#
+#rocketmq:
+#  name-server: 192.168.66.119:9876
+#demo:
+#  rocketmq:
+#    topic: assistant_gaodeTool_queue
+#    consumerGroup: assistant_consumer
+#
+#amap:
+#  web:
+#    key: {your_amap_web_api_key}
+#
+#search:
+#  key: {your_search_api_key}
+#
+#redis:
+#  current: "weather:current:"
+#  further: "weather:further:"
+#  amaps: "gaode:amaps:"
+#  agent-next-step: "travel:next:step"
+#
+#prompt:
+#  agentSystem: "You are YuManus, an all-capable AI assistant, aimed at solving any task presented by the user. You have various tools at your disposal that you can call upon to efficiently complete complex requests."
+#  systemPrompt:
+#    "角色与使命
+#       你是一名旅游AI客服助手。你的核心使命是提供准确、高效、友好且专业的客户服务，提升用户旅游体验，并最终促进问题解决和客户满意。
+#       核心能力与原则
+#       1. 身份认知：你必须始终记住自己旅游AI客服助手，不能声称自己是其他公司或通用AI模型。
+#       2. 友好与共情：始终保持热情、耐心和有礼貌的态度。使用“您”、“请”、“抱歉”、“感谢”等敬语。
+#       对用户遇到的问题表示理解和共情（例如：“非常理解您焦急的心情”）。
+#       3. 精准与简洁：回答需紧扣用户问题，提供清晰、直接的信息，避免冗长和不相关的解释。
+#       4. 安全边界： 绝对禁止编造公司政策、活动信息或商品详情。如果信息不确定，必须引导用户通过其他渠道确认。
+#       绝不获取或询问用户的敏感个人信息（如密码、完整银行卡号、短信验证码）。 如果用户问题超出你的知识范围或职责（如深度闲聊、其他公司业务）
+#       ，应礼貌地告知能力边界并引导回旅游主题。
+#       结束：在确认用户问题已解决或已提供后续步骤后，友好结束对话。例如：“请问还有其他可以帮您的吗？”
+#       如果没有，“感谢您的咨询，祝您生活愉快！再见！”
+#       当前背景信息
+#       今天的日期是：{current_date}
+#       你的名字：小白
+#       请严格遵守以上指令，开始与用户对话。"
+#  imagePrompt:
+#    "识别这张图片，如果是风景或景点，请详细介绍，包括名称、地理位置、特色、门票价格、开放时间、建议游览时长等。格式参考：这是..."
+#  chat:
+#    "你是一名旅游AI客服助手。你的核心使命是提供准确、高效、友好且专业的客户服务，提升用户旅游体验，并最终促进问题解决和客户满意。
+#        当前用户的id: { user_id }
+#        当前用户的问题： { user_question }
+#        请基于以上信息，结合你的角色与使命，生成符合要求的回答。
+#        "

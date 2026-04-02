@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.itbaizhan.travel_ai_service.mapper.AiConversationsMapper;
+import com.itbaizhan.travel_ai_service.mapper.AiMessageDetailMapper;
 import com.itbaizhan.travel_ai_service.mapper.AiMessagesMapper;
 import com.itbaizhan.travelcommon.AiSessionDto.SessionRequest;
 import com.itbaizhan.travelcommon.pojo.AiConversations;
+import com.itbaizhan.travelcommon.pojo.AiMessageDetail;
 import com.itbaizhan.travelcommon.pojo.AiMessages;
 import com.itbaizhan.travelcommon.service.AiAssistantService;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -19,10 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
@@ -33,6 +32,8 @@ public class AiAssistantServiceImpl implements AiAssistantService {
     private AiMessagesMapper aiMessagesMapper;
     @Autowired
     private ChatMemory chatMemory;
+    @Autowired
+    private AiMessageDetailMapper aiMessageDetailMapper;
 
    // private static final String DEFAULT_PROMPT = "你好，介绍下你自己！";
     @Override
@@ -46,10 +47,16 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         aiConversations.setStatus(1);
         aiConversations.setCreatedAt(LocalDateTime.now());
         aiConversations.setUpdatedAt(LocalDateTime.now());
-        aiConversations.setStartedAt(LocalDateTime.now());
         aiConversationsMapper.insert(aiConversations);
 
         return aiConversations;
+    }
+
+    @Override
+    public boolean existConversation(String conversationId) {
+        QueryWrapper<AiConversations> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("session_id", conversationId);
+        return aiConversationsMapper.exists(queryWrapper);
     }
 
     @Override
@@ -57,7 +64,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         IPage<AiConversations> aiConversationsIPage = new Page<>(page, size);
         QueryWrapper<AiConversations> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_id", userId).eq("context_type", contextType);
-        queryWrapper.orderByDesc("created_at");
+        queryWrapper.orderByDesc("updated_at");
         return aiConversationsMapper.selectPage(aiConversationsIPage, queryWrapper);
     }
 
@@ -75,6 +82,7 @@ public class AiAssistantServiceImpl implements AiAssistantService {
     public void updateSession(String sessionId, String title) {
         AiConversations conversation = new AiConversations();
         conversation.setTitle(title);
+        conversation.setUpdatedAt(LocalDateTime.now());
         QueryWrapper<AiConversations> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("session_id", sessionId);
         aiConversationsMapper.update(conversation, queryWrapper);
@@ -93,6 +101,30 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         // 清除聊天记忆
         chatMemory.clear(sessionId);
     }
+    public void insertMessage(AiMessages aiMessages) {
+        AiMessageDetail aiMessageDetail = getAiMessageDetail(aiMessages);
+        aiMessagesMapper.insert(aiMessages);
+        aiMessageDetailMapper.insert(aiMessageDetail);
+        AiConversations conversation = new AiConversations();
+        conversation.setUpdatedAt(LocalDateTime.now());
+        QueryWrapper<AiConversations> conversationsQueryWrapper = new QueryWrapper<>();
+        conversationsQueryWrapper.eq("session_id", aiMessages.getSessionId());
+        aiConversationsMapper.update(conversation, conversationsQueryWrapper);
+    }
+
+    private AiMessageDetail getAiMessageDetail(AiMessages aiMessages) {
+        AiMessageDetail aiMessageDetail = new AiMessageDetail();
+        aiMessageDetail.setMessageId(aiMessages.getMessageId());
+        aiMessageDetail.setSessionId(aiMessages.getSessionId());
+        if(aiMessages.getToolUsage() != null){
+            aiMessageDetail.setToolUsage(aiMessages.getToolUsage());
+        }
+        aiMessageDetail.setUserId(aiMessages.getUserId());
+        aiMessageDetail.setIsAgent(aiMessages.getIsAgent());
+        aiMessageDetail.setUseToken(aiMessages.getTokensUsed());
+        aiMessageDetail.setProcessingTime(aiMessages.getProcessingTime());
+        return aiMessageDetail;
+    }
 
     @Override
     public void deleteMessage(String messageId) {
@@ -106,9 +138,15 @@ public class AiAssistantServiceImpl implements AiAssistantService {
         }
         
         String sessionId = aiMessages.getSessionId();
-
         // 删除数据库中的消息
         aiMessagesMapper.delete(queryWrapper);
+        aiMessagesMapper.deleteByAiMessagesDetail(messageId);
+
+        AiConversations conversation = new AiConversations();
+        conversation.setUpdatedAt(LocalDateTime.now());
+        QueryWrapper<AiConversations> conversationsQueryWrapper = new QueryWrapper<>();
+        conversationsQueryWrapper.eq("session_id", sessionId);
+        aiConversationsMapper.update(conversation, conversationsQueryWrapper);
         
         // 更新聊天记忆：先清除，再从数据库加载最近的 N 条记录
         chatMemory.clear(sessionId);

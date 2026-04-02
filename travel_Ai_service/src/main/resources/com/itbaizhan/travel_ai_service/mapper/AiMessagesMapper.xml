@@ -6,12 +6,6 @@
 
     <resultMap id="BaseResultMap" type="com.itbaizhan.travelcommon.pojo.AiMessages">
             <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="conversationId" column="conversation_id" jdbcType="BIGINT"/>
-            <result property="messageType" column="message_type" jdbcType="OTHER"/>
-            <result property="content" column="content" jdbcType="VARCHAR"/>
-            <result property="contentType" column="content_type" jdbcType="OTHER"/>
-            <result property="metadata" column="metadata" jdbcType="OTHER"/>
-            <result property="attachments" column="attachments" jdbcType="OTHER"/>
             <result property="tokensUsed" column="tokens_used" jdbcType="INTEGER"/>
             <result property="processingTime" column="processing_time" jdbcType="INTEGER"/>
             <result property="confidenceScore" column="confidence_score" jdbcType="DECIMAL"/>
@@ -25,4 +19,8 @@
         attachments,tokens_used,processing_time,
         confidence_score,feedback,created_at
     </sql>
+
+    <update id="deleteByAiMessagesDetail" parameterType="string">
+        update ai_message_detail set is_del = 1 WHERE message_id = #{messageId}
+    </update>
 </mapper>

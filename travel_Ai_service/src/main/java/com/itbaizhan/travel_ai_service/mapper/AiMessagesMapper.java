@@ -11,6 +11,7 @@ import com.itbaizhan.travelcommon.pojo.AiMessages;
 */
 public interface AiMessagesMapper extends BaseMapper<AiMessages> {
 
+    void deleteByAiMessagesDetail(String messageId);
 }
 
 

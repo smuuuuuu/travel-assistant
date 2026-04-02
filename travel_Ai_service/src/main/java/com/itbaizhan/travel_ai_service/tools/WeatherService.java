@@ -76,11 +76,13 @@ public class WeatherService{
                 return weatherForecast;
             } else {
                 //throw new RuntimeException("天气预报查询失败: " + json.getString("info"));
-                throw new BusException(200,"返回结果为空,请检查传入参数");
+                //throw new BusException(200,"返回结果为空,请检查传入参数");
+                return null;
             }
         } catch (Exception e) {
             //throw new RuntimeException("获取天气预报失败", e);
-            throw new BusException(500,"Error getWeatherForecast： " + e.getMessage());
+            //throw new BusException(500,"Error getWeatherForecast： " + e.getMessage());
+            return null;
         }
     }
     /**
@@ -110,10 +112,12 @@ public class WeatherService{
                 redisTemplate.opsForValue().set(currentKey, JSON.toJSONString(weatherInfo),30, TimeUnit.MINUTES);
                 return weatherInfo;
             } else {
-                throw new BusException(200,"返回结果为空,请检查传入参数");
+                //throw new BusException(200,"返回结果为空,请检查传入参数");
+                return null;
             }
         } catch (Exception e) {
-            throw new BusException(500,"Error getWeatherForecast： " + e.getMessage());
+            //throw new BusException(500,"Error getWeatherForecast： " + e.getMessage());
+            return null;
         }
     }
     /**
@@ -136,7 +140,8 @@ public class WeatherService{
             // 2. 获取城市编码
             return cityCode;
         } else {
-            throw new BusException(CodeEnum.AI_WEATHER_LOCATION_ERROR);
+           // throw new BusException(CodeEnum.AI_WEATHER_LOCATION_ERROR);
+            return null;
         }
     }
 

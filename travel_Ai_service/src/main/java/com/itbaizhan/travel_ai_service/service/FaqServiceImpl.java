@@ -1,8 +1,7 @@
 package com.itbaizhan.travel_ai_service.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.itbaizhan.travel_ai_service.mapper.TravelFaqMapper;
 import com.itbaizhan.travelcommon.pojo.TravelFaq;
 import com.itbaizhan.travelcommon.service.AiAssistantFaqService;
@@ -31,7 +30,9 @@ public class FaqServiceImpl implements AiAssistantFaqService {
         map.put("id", faq.getId());
         map.put("question", faq.getQuestion());
         map.put("answer", faq.getAnswer());
-        map.put("type", faq.getType());
+        if(StrUtil.isNotBlank(faq.getCity())){
+            map.put("city", faq.getCity());
+        }
         Document document = new Document(faq.getId(), faq.getQuestion(), map);
         List<Document> documents = List.of(document);
         store.add(documents);
@@ -54,7 +55,7 @@ public class FaqServiceImpl implements AiAssistantFaqService {
         faqMapper.insert(faq);
     }
 
-    @Override
+    /*@Override
     public IPage<TravelFaq> searchFaq(int page, int size, Integer type) {
         Page<TravelFaq> faqIPage = new Page<>(page, size);
         QueryWrapper<TravelFaq> wrapper = new QueryWrapper<>();
@@ -99,6 +100,12 @@ public class FaqServiceImpl implements AiAssistantFaqService {
     private void deleteFaQdrant(String id) {
         List<String> id1 = List.of(id);
         store.delete(id1);
+    }*/
+    @Override
+    public boolean existFaq(String question) {
+        SearchRequest searchRequest = SearchRequest.builder().query(question).topK(1).build();
+        List<Document> documents = store.similaritySearch(searchRequest);
+        return documents != null && !documents.isEmpty();
     }
 
     @Override
@@ -125,5 +132,17 @@ public class FaqServiceImpl implements AiAssistantFaqService {
             faq.setUseCount(faq.getUseCount() + 1);
             faqMapper.updateById(faq);
         }
+    }
+
+    /**
+     * 批量增加向量检索命中的 FAQ 使用次数
+     */
+    public void increaseUseCountBatch(List<String> ids){
+        if(ids == null || ids.isEmpty()){
+            return;
+        }
+        UpdateWrapper<TravelFaq> wrapper = new UpdateWrapper<>();
+        wrapper.in("id", ids).setSql("use_count = use_count + 1");
+        faqMapper.update(null, wrapper);
     }
 }
