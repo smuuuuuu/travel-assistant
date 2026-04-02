@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package com.itbaizhan.travelcommon.triple.aiassistant;
+
+option java_multiple_files = true;
+option java_package = "com.itbaizhan.travelcommon.triple.aiassistant";
+option java_outer_classname = "AiAssistantProto";
+
+service AiAssistantTripleService {
+  rpc Assist(AiAssistantRequest) returns (stream AiAssistantReply);
+}
+
+message AiAssistantRequest {
+  string question = 1;
+}
+
+message AiAssistantReply {
+  string content = 1;
+}
+
