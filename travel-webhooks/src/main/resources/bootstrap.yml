@@ -1,0 +1,10 @@
+spring:
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      config:
+        server-addr: 192.168.66.119:8848
+        namespace: ec699356-48ee-436d-b241-329170a06095
+        file-extension: yaml
+        prefix: travel_webhooks
