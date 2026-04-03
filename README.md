@@ -4,34 +4,12 @@
 结合springAi的旅行计划AiAgent
 
 #### 软件架构
-springBoot+springAi
+springBoot+springAi+springCloudAlibaba
+
+java 17，Spring Boot 3.3 + Spring Cloud 2023 + Spring Cloud Alibaba（Nacos 注册与配置）。 Apache Dubbo 3.x 做服务间 RPC；用户、偏好、文件、邮件、FAQ 等按域拆分为独立模块，API 层通过 @DubboReference 聚合调用。 Spring AI + Spring AI Alibaba（通义/DashScope） 构建对话与多模态能力；Qdrant 向量库支撑检索增强（RAG）。 Redis + Redisson（会话记忆、分布式锁等）；RocketMQ 消息；MyBatis-Plus + MySQL。 Sentinel 限流熔断（如 AI 接口）；Spring Boot Admin 客户端便于运维观测。
 
 
 #### 安装教程
 
 1.  如果需要使用分布式配置中心将每一个项目中的applicaiton.yml文件复制到配置中心即可
-2.  xxxx
-3.  xxxx
 
-#### 使用说明
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
-
-
-#### 特技
-
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
